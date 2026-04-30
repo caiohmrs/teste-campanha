@@ -77,7 +77,7 @@ if "last_coords" not in st.session_state:
 
 # Redirecionar se não logado
 if st.session_state["usuario_logado"] is None:
-    st.switch_page("pages/_00_Login.py")
+    st.switch_page("pages/00_Login.py")
 
 # =============================================================================
 # CAPTURA GLOBAL DE ERROS
@@ -165,7 +165,7 @@ with st.sidebar:
         st.session_state.clear()
         st.cache_data.clear()
         time.sleep(2)
-        st.switch_page("pages/_00_Login.py")
+        st.switch_page("pages/00_Login.py")
 
 # =============================================================================
 # CABEÇALHO BEM-VINDO

@@ -41,7 +41,7 @@ if "error_log" not in st.session_state:
 # =============================================================================
 
 if st.session_state["usuario_logado"] is not None:
-    st.switch_page("pages/_01_Principal.py")
+    st.switch_page("pages/01_Principal.py")
 
 # =============================================================================
 # TELA DE LOGIN
