@@ -22,24 +22,7 @@ st.set_page_config(
     page_icon="🧢",                                                                    
     layout="wide"                                                                      
 )                                                                                      
-                                                                                       
-inject_styles()                                                                        
-                                                                                       
-# =============================================================================        
-# CONFIGURAR NAVEGAÇÃO COM PÁGINAS OCULTAS                                             
-# =============================================================================        
-                                                                                       
-login_page = st.Page("pages/00_Login.py", title="Login", icon="🏠", default=True)      
-principal_page = st.Page("pages/01_Principal.py", title="Principal", icon="🚀")        
-                                                                                       
-# Navegação com páginas ocultas da sidebar                                             
-pg = st.navigation(                                                                    
-    pages=[login_page, principal_page],                                                
-    position="hidden"  # ← Isso esconde o menu de navegação                            
-)                                                                                      
-                                                                                       
-pg.run()                                                                               
-                          
+                                                                                                  
 
 # =============================================================================
 # INJETAR ESTILOS CENTRALIZADOS
