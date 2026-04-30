@@ -159,23 +159,24 @@ def render_log_entry(acao, hora, feedback=None, localizacao=None):
     """Renderiza uma entrada de log."""
     badge_html = ""
     if feedback and "Check-out" in acao:
-        badge_html = f"<span class=\"log-entry-badge\">{feedback.split('|')[0]}</span>"
-    
+        badge_html = f'<span class="log-entry-badge">{feedback.split("|")[0]}</span>'
+
     mapa_html = ""
     if localizacao and "," in str(localizacao):
-        mapa_html = f"""<div>
-            <a href="https://www.google.com/maps?q={localizacao}" target="_blank" class="log-entry-map-btn">📍 MAPA</a>
-        </div>"""
-    
-    st.markdown(f"""
-        <div class="log-entry">
-            <div style="text-align:left;">
-                <span class="log-entry-action">{acao}</span>{badge_html}
-                <br><span class="log-entry-time">🕒 {hora}</span>
-            </div>
-            {mapa_html}
-        </div>
-    """, unsafe_allow_html=True)
+        mapa_html = f'''<div>                                                                             
+            <a href="https://www.google.com/maps?q={localizacao}" target="_blank"                         
+class="log-entry-map-btn">📍 MAPA</a>                                                                     
+        </div>'''
+
+    st.markdown(f'''                                                                                      
+        <div class="log-entry">                                                                           
+            <div style="text-align:left;">                                                                
+                <span class="log-entry-action">{acao}</span>{badge_html}                                  
+                <br><span class="log-entry-time">🕒 {hora}</span>                                         
+            </div>                                                                                        
+            {mapa_html}                                                                                   
+        </div>                                                                                            
+    ''', unsafe_allow_html=True)
 
 
 def render_contract_entry(nome, whatsapp):
