@@ -54,7 +54,8 @@ from utils.components import (
     render_diagnostic_card,
     render_log_entry,
     render_action_link_button,
-    render_metric_row
+    render_metric_row,
+    render_contract_entry
 )
 
 # =============================================================================
@@ -697,6 +698,7 @@ elif cargo_limpo == "supervisor":
                         st.link_button("💬 CHAT", f"https://wa.me/{w_vol}", width='stretch')
 
             st.markdown("<br>", unsafe_allow_html=True)
+            nome_primeiro = u['Nome'].split()[0].upper()
             rel_txt = f"📊 *RELATÓRIO {d_str}*\n👤 Sup: {nome_primeiro}\n👥 Equipe: {total_vol}\n🔥 Ativos: {num_ativos}\n🎯 Ações: {total_acoes}"
             st.link_button("📲 ENVIAR RELATÓRIO P/ COORDENAÇÃO",
                            f"https://api.whatsapp.com/send?text={urllib.parse.quote(rel_txt)}", width='stretch',
