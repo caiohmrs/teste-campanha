@@ -642,9 +642,11 @@ elif cargo_limpo == "supervisor":
                 {'label': 'AÇÕES', 'value': str(total_acoes)}
             ])
 
-            st.markdown(
-                f"<h3 style='font-size: 1.1rem; text-align: left; margin-top: -15px;'>📋 STATUS DA EQUIPE ({d_str[:5]})</h3>",
-                unsafe_allow_html=True)
+            st.markdown(f'''
+    <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px; font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);">
+        📋 STATUS DA EQUIPE ({d_str[:5]})
+    </h3>
+''', unsafe_allow_html=True)
 
             for _, vol in minha_equipe.iterrows():
                 logs_vol = df_logs[
@@ -665,20 +667,24 @@ elif cargo_limpo == "supervisor":
 
                 with st.expander(f"{label} | {vol['Nome'].upper()}"):
                     if not logs_vol.empty:
-                        feed_html = ""
                         for _, row in logs_vol.tail(5)[::-1].iterrows():
                             acao_txt = str(row['Tipo_Acao']).split("|")[0].split("Foto:")[0].strip().upper()
                             hora_txt = row['Data_Hora'].split()[-1][:5]
                             fb = str(row.get('Feedback', '')).strip()
-                            badge = f"<span style='background-color:var(--cor-primaria); border:1px solid #000; padding:1px 4px; font-size:0.5rem; margin-left:8px;'>{fb.split('|')[0]}</span>" if "Check-out" in \
-                                                                                                                                                                                       row[
-                                                                                                                                                                                           'Tipo_Acao'] and fb and fb != "nan" else ""
-
-                            feed_html += f"<div style='background-color:var(--cor-fundo); border:2px solid var(--cor-texto); padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:3px 3px 0px var(--cor-texto);'><div style='text-align:left;'><span style='font-family:Archivo Black; font-size:0.8rem;'>{acao_txt}</span>{badge}<br><span style='font-size:0.7rem; color:#666; font-weight:bold;'>🕒 {hora_txt}</span></div>"
-                            if "," in str(row['Localização']):
-                                feed_html += f"<div><a href='https://www.google.com/maps?q={row['Localização']}' target='_blank' style='background-color:var(--cor-secundaria); color:#FFF; padding:3px 6px; border:1px solid #000; font-size:0.5rem; text-decoration:none; font-family:Archivo Black;'>📍 MAPA</a></div>"
-                            feed_html += "</div>"
-                        st.markdown(feed_html, unsafe_allow_html=True)
+                            
+                            badge = None
+                            if "Check-out" in row['Tipo_Acao'] and fb and fb != "nan":
+                                badge = fb.split('|')[0]
+                            
+                            loc = row.get('Localização', '')
+                            mostrar_mapa = "," in str(loc)
+                            
+                            render_log_entry(
+                                acao=acao_txt,
+                                hora=hora_txt,
+                                feedback=badge,
+                                localizacao=loc if mostrar_mapa else None
+                            )
 
                     st.divider()
                     w_vol = sanitize_whatsapp(vol['WhatsApp'])
