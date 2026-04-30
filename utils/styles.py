@@ -75,9 +75,8 @@ def get_css():
             --sombra-offset-y: {ESTILO['sombra_offset_y']};
             --sombra-blur: {ESTILO['sombra_blur']};
             --border-radius: {ESTILO['border_radius']};
-            --fonte-titulo: {ESTILO['fonte_titulo']};                                                          
-            --fonte-texto: {ESTILO['fonte_texto']};                                                            
-                                       
+            --fonte-titulo: {ESTILO['fonte_titulo']};
+            --fonte-texto: {ESTILO['fonte_texto']};
         }}
 
         /* 1. CONFIGURAÇÕES GERAIS DA APP */
@@ -230,6 +229,450 @@ def get_css():
         /* 11. BOTÃO DE FECHAR MODAL */
         button[aria-label="Close"] {{
             display: none !important;
+        }}
+
+        /* =====================================================================
+           COMPONENTES REUTILIZÁVEIS (CSS MOVIDO DAS PÁGINAS)
+           ===================================================================== */
+
+        /* 12. LOGIN HEADER */
+        .login-header {{
+            text-align: center;
+            font-size: 4rem;
+            line-height: 0.9;
+            margin-bottom: 20px;
+            margin-top: -100px;
+        }}
+
+        .login-header-subtitle {{
+            color: var(--cor-secundaria);
+        }}
+
+        /* 13. LOGIN BOX */
+        .login-box {{
+            background-color: var(--cor-primaria);
+            padding: 15px;
+            border: 4px solid var(--cor-texto);
+            box-shadow: 10px 10px 0px var(--cor-texto);
+            text-align: center;
+        }}
+
+        .login-box h2 {{
+            margin-top: 0;
+            font-size: 1.5rem;
+            font-family: "Archivo Black", sans-serif;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--cor-texto);
+        }}
+
+        /* 14. WELCOME BANNER */
+        .welcome-banner {{
+            background-color: var(--cor-primaria);
+            padding: 15px;
+            border: 4px solid var(--cor-texto);
+            box-shadow: 8px 8px 0px var(--cor-texto);
+            text-align: center;
+            width: 90%;
+            margin: 10px auto 25px auto;
+        }}
+
+        .welcome-banner-title {{
+            margin: 0;
+            font-size: 1.5rem;
+            font-family: "Archivo Black", sans-serif;
+            font-style: italic;
+            color: var(--cor-texto);
+            line-height: 1;
+        }}
+
+        .welcome-banner-name {{
+            margin: 0;
+            font-size: 2.2rem;
+            font-family: "Archivo Black", sans-serif;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--cor-secundaria);
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: clip;
+            margin-top: -30px;
+        }}
+
+        /* 15. STATUS BAR */
+        .status-bar {{
+            background-color: var(--cor-primaria);
+            border-top: 2px solid var(--cor-texto);
+            border-bottom: 2px solid var(--cor-texto);
+            padding: 6px 0;
+            margin: 10px 0 25px 0;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-family: "Archivo Black", sans-serif;
+            text-transform: uppercase;
+            font-style: italic;
+        }}
+
+        .status-bar-item {{
+            color: var(--cor-texto);
+            font-size: 0.9rem;
+        }}
+
+        .status-bar-dot {{
+            color: var(--cor-secundaria);
+        }}
+
+        /* 16. SECTION HEADER */
+        .section-header {{
+            background-color: var(--cor-primaria);
+            padding: 15px;
+            border: 4px solid var(--cor-texto);
+            box-shadow: 8px 8px 0px var(--cor-texto);
+            text-align: center;
+            margin-bottom: 25px;
+        }}
+
+        .section-header h2 {{
+            margin: 0;
+            font-size: 1.8rem;
+            font-style: italic;
+            color: var(--cor-texto);
+        }}
+
+        /* 17. MODAL HEADER */
+        .modal-header {{
+            background-color: var(--cor-primaria);
+            padding: 15px;
+            border: 3px solid var(--cor-texto);
+            text-align: center;
+            margin-bottom: 20px;
+        }}
+
+        .modal-header h2 {{
+            margin: 0;
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--cor-texto);
+        }}
+
+        /* 18. INFO BANNER (MENSAGEM DO DIA) */
+        .info-banner {{
+            background-color: var(--cor-primaria);
+            padding: 40px 20px;
+            border: 5px solid var(--cor-texto);
+            box-shadow: 10px 10px 0px var(--cor-texto);
+            text-align: center;
+            margin-top: 20px;
+        }}
+
+        .info-banner h1 {{
+            font-family: "Archivo Black", sans-serif;
+            font-style: italic;
+            color: var(--cor-texto);
+            font-size: 2.5rem;
+        }}
+
+        .info-banner-subtitle {{
+            color: var(--cor-secundaria);
+        }}
+
+        .info-banner hr {{
+            border: 2px solid var(--cor-texto);
+            margin: 20px 0;
+        }}
+
+        .info-banner p {{
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--cor-texto);
+            line-height: 1.4;
+        }}
+
+        /* 19. TICKER (ADMIN) */
+        .ticker-container {{
+            width: 100%;
+            overflow: hidden;
+            background: var(--cor-primaria);
+            border-top: 3px solid var(--cor-texto);
+            border-bottom: 3px solid var(--cor-texto);
+            padding: 8px 0;
+            margin-bottom: 25px;
+            white-space: nowrap;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }}
+
+        .ticker-content {{
+            display: inline-block;
+            animation: scroll 45s linear infinite;
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 0.9rem;
+            color: var(--cor-texto);
+            font-style: italic;
+            text-transform: uppercase;
+        }}
+
+        .ticker-content:hover {{
+            animation-play-state: paused;
+        }}
+
+        @keyframes scroll {{
+            0% {{ transform: translateX(0); }}
+            100% {{ transform: translateX(-50%); }}
+        }}
+
+        /* 20. TEAM CARD (SUPERVISOR/ADMIN) */
+        .team-card {{
+            background-color: var(--cor-branco);
+            border: 4px solid var(--cor-texto);
+            box-shadow: 6px 6px 0px var(--cor-texto);
+            padding: 20px;
+            margin-bottom: 12px;
+        }}
+
+        .team-card-header {{
+            border-bottom: 3px solid var(--cor-texto);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+
+        .team-card-name {{
+            margin: 0;
+            font-family: "Archivo Black", sans-serif;
+            font-size: 1.5rem;
+            color: var(--cor-secundaria);
+            text-transform: uppercase;
+        }}
+
+        .team-card-macro {{
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: bold;
+        }}
+
+        .team-card-badge {{
+            background-color: var(--cor-primaria);
+            border: 2px solid var(--cor-texto);
+            padding: 4px 10px;
+            font-family: "Archivo Black", sans-serif;
+            font-size: 0.8rem;
+        }}
+
+        .team-card-metric {{
+            flex: 1;
+            background-color: var(--cor-fundo);
+            border: 2px solid var(--cor-texto);
+            padding: 12px;
+            text-align: center;
+        }}
+
+        .team-card-metric-label {{
+            font-family: "Archivo Black", sans-serif;
+            font-size: 0.85rem;
+            color: #666;
+        }}
+
+        .team-card-metric-value {{
+            font-family: "Archivo Black", sans-serif;
+            font-size: 2.2rem;
+            color: var(--cor-texto);
+            line-height: 1;
+            margin-top: 5px;
+        }}
+
+        /* 21. METRIC CARD */
+        .metric-card {{
+            background: var(--cor-branco);
+            border: 4px solid var(--cor-texto);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 6px 6px 0px var(--cor-texto);
+        }}
+
+        .metric-card-label {{
+            font-family: 'Archivo Black';
+            font-size: 0.9rem;
+            color: #666;
+        }}
+
+        .metric-card-value {{
+            font-family: 'Archivo Black';
+            font-size: 3rem;
+            color: var(--cor-texto);
+            line-height: 1;
+            margin-top: 10px;
+        }}
+
+        .metric-card-value-secondary {{
+            color: var(--cor-secundaria);
+        }}
+
+        /* 22. SUPPORT PANEL (SUPORTE) */
+        .support-panel {{
+            background-color: var(--cor-secundaria);
+            padding: 20px;
+            border: 4px solid var(--cor-texto);
+            box-shadow: 8px 8px 0px var(--cor-texto);
+            text-align: center;
+            margin-bottom: 25px;
+        }}
+
+        .support-panel h1 {{
+            margin: 0;
+            font-family: "Archivo Black", sans-serif;
+            font-style: italic;
+            color: var(--cor-branco);
+            font-size: 2.5rem;
+        }}
+
+        .support-panel p {{
+            margin: 10px 0 0 0;
+            color: var(--cor-primaria);
+            font-weight: bold;
+        }}
+
+        /* 23. DIAGNOSTIC CARD */
+        .diagnostic-card {{
+            border: 3px solid var(--cor-texto);
+            padding: 15px;
+            text-align: center;
+            box-shadow: 4px 4px 0px var(--cor-texto);
+        }}
+
+        .diagnostic-card h3 {{
+            margin: 0;
+            color: var(--cor-texto);
+        }}
+
+        .diagnostic-card-status {{
+            font-size: 2rem;
+            margin: 10px 0;
+        }}
+
+        .diagnostic-card-msg {{
+            font-size: 0.8rem;
+            margin: 0;
+            color: var(--cor-texto);
+        }}
+
+        /* 24. LOG ENTRY */
+        .log-entry {{
+            background-color: var(--cor-fundo);
+            border: 2px solid var(--cor-texto);
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 3px 3px 0px var(--cor-texto);
+        }}
+
+        .log-entry-action {{
+            font-family: Archivo Black;
+            font-size: 0.8rem;
+        }}
+
+        .log-entry-time {{
+            font-size: 0.7rem;
+            color: #666;
+            font-weight: bold;
+        }}
+
+        .log-entry-badge {{
+            background-color: var(--cor-primaria);
+            border: 1px solid #000;
+            padding: 1px 4px;
+            font-size: 0.5rem;
+            margin-left: 8px;
+        }}
+
+        .log-entry-map-btn {{
+            background-color: var(--cor-secundaria);
+            color: #FFF;
+            padding: 3px 6px;
+            border: 1px solid #000;
+            font-size: 0.5rem;
+            text-decoration: none;
+            font-family: Archivo Black;
+        }}
+
+        /* 25. CONTRACT CARD */
+        .contract-card {{
+            border: 1px solid #ddd;
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+
+        .contract-card-name {{
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--cor-texto);
+        }}
+
+        .contract-card-btn {{
+            background-color: #25D366;
+            color: #FFFFFF;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border: 2px solid var(--cor-texto);
+            text-decoration: none;
+            font-weight: bold;
+            white-space: nowrap;
+        }}
+
+        /* 26. ACTION LINK BUTTON */
+        .action-link-btn {{
+            background-color: var(--cor-texto);
+            color: var(--cor-primaria);
+            text-align: center;
+            padding: 10px;
+            border: 2px solid var(--cor-primaria);
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-decoration: none;
+            display: block;
+        }}
+
+        /* 27. SMALL METRIC ROW */
+        .metric-row {{
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 15px;
+        }}
+
+        .metric-row-item {{
+            flex: 1;
+            background: var(--cor-branco);
+            border: 2px solid var(--cor-texto);
+            box-shadow: 3px 3px 0px var(--cor-texto);
+            text-align: center;
+            padding: 5px;
+        }}
+
+        .metric-row-label {{
+            margin: 0;
+            font-size: 0.6rem;
+            font-family: 'Archivo Black';
+            color: #666;
+        }}
+
+        .metric-row-value {{
+            margin: 0;
+            font-size: 1.2rem;
+            font-family: 'Archivo Black';
+            color: var(--cor-texto);
+        }}
+
+        .metric-row-value-secondary {{
+            color: var(--cor-secundaria);
         }}
     </style>
     """

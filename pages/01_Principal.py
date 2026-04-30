@@ -41,6 +41,21 @@ from funcoes import (
 )
 
 from utils.styles import inject_styles
+from utils.components import (
+    render_welcome_banner,
+    render_status_bar,
+    render_section_header,
+    render_modal_header,
+    render_info_banner,
+    render_ticker,
+    render_team_card,
+    render_metric_card,
+    render_support_panel,
+    render_diagnostic_card,
+    render_log_entry,
+    render_action_link_button,
+    render_metric_row
+)
 
 # =============================================================================
 # CONFIGURAÇÃO INICIAL
@@ -171,45 +186,7 @@ with st.sidebar:
 # CABEÇALHO BEM-VINDO
 # =============================================================================
 
-nome_primeiro = u['Nome'].split()[0].upper()
-
-st.markdown(f"""
-    <div style='
-        background-color: var(--cor-primaria); 
-        padding: 15px; 
-        border: 4px solid var(--cor-texto); 
-        box-shadow: 8px 8px 0px var(--cor-texto); 
-        text-align: center;
-        width: 90%;
-        margin: 10px auto 25px auto;
-    '>
-        <h3 style='
-            margin: 0; 
-            font-size: 1.5rem; 
-            font-family: "Archivo Black", sans-serif; 
-            font-style: italic; 
-            color: var(--cor-texto);
-            line-height: 1;
-        '>
-            BEM-VINDO,
-        </h3>
-        <h1 style='
-            margin: 0; 
-            font-size: 2.2rem; 
-            font-family: "Archivo Black", sans-serif; 
-            font-style: italic; 
-            text-transform: uppercase; 
-            color: var(--cor-secundaria);
-            line-height: 1.1;
-            white-space: nowrap;  
-            overflow: hidden;     
-            text-overflow: clip; 
-            margin-top: -30px;
-        '>
-            {nome_primeiro}
-        </h1>
-    </div>
-""", unsafe_allow_html=True)
+render_welcome_banner(u['Nome'])
 
 # =============================================================================
 # MODAIS DE PRESENÇA (DIALOG)
@@ -217,11 +194,7 @@ st.markdown(f"""
 
 @st.dialog("REGISTRO DE ENTRADA")
 def modal_checkin(u, agora):
-    st.markdown(f"""
-        <div style='background-color: var(--cor-primaria); padding: 15px; border: 3px solid var(--cor-texto); text-align: center; margin-bottom: 20px;'>
-            <h2 style='margin:0; font-size: 1.5rem; font-style: italic; color: var(--cor-texto);'>INICIAR MISSÃO</h2>
-        </div>
-    """, unsafe_allow_html=True)
+    render_modal_header("INICIAR MISSÃO")
 
     foto_in = st.camera_input("FOTO OBRIGATÓRIA", key="cam_in_dialog")
 
@@ -263,11 +236,7 @@ def modal_checkin(u, agora):
 
 @st.dialog("REGISTRO DE SAÍDA")
 def modal_checkout(u, agora):
-    st.markdown(f"""
-        <div style='background-color: var(--cor-primaria); padding: 15px; border: 3px solid var(--cor-texto); text-align: center; margin-bottom: 20px;'>
-            <h2 style='margin:0; font-size: 1.5rem; font-style: italic; color: var(--cor-texto);'>FINALIZAR MISSÃO</h2>
-        </div>
-    """, unsafe_allow_html=True)
+    render_modal_header("FINALIZAR MISSÃO")
 
     foto_out = st.camera_input("FOTO OBRIGATÓRIA", key="cam_out_dialog")
     st.divider()
@@ -336,28 +305,7 @@ if cargo_limpo == "colaborador":
         df_logs['Data_Hora'].str.contains(hoje_str))] if df_logs is not None else pd.DataFrame()
     qtd_acoes_hoje = len(meus_logs_hoje)
 
-    st.markdown(f"""
-        <div style='
-            background-color: var(--cor-primaria);
-            border-top: 2px solid var(--cor-texto);
-            border-bottom: 2px solid var(--cor-texto);
-            padding: 6px 0;
-            margin: 10px 0 25px 0;
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            font-family: "Archivo Black", sans-serif;
-            text-transform: uppercase;
-            font-style: italic;
-        '>
-            <span style='color: var(--cor-texto); font-size: 0.9rem;'>
-                <span style='color: var(--cor-secundaria);'>●</span> AÇÕES HOJE: {qtd_acoes_hoje}
-            </span>
-            <span style='color: var(--cor-texto); font-size: 0.9rem;'>
-                <span style='color: var(--cor-secundaria);'>●</span> STATUS: {'ATIVO' if qtd_acoes_hoje > 0 else 'OFF'}
-            </span>
-        </div>
-    """, unsafe_allow_html=True)
+    render_status_bar(qtd_acoes_hoje, qtd_acoes_hoje > 0)
 
     if df_msgs is not None and not df_msgs.empty:
         msg_grupo = df_msgs[df_msgs['ID_Alvo'].astype(str).str.strip() == str(u['ID_Grupo']).strip()]
@@ -366,19 +314,11 @@ if cargo_limpo == "colaborador":
             m = msg_grupo.iloc[-1]
 
             if not st.session_state["mensagem_exibida"]:
-                st.markdown(f"""
-                    <div style='background-color: var(--cor-primaria); padding: 40px 20px; border: 5px solid var(--cor-texto); 
-                                box-shadow: 10px 10px 0px var(--cor-texto); text-align: center; margin-top: 20px;'>
-                        <h1 style='font-family: "Archivo Black", sans-serif; font-style: italic; color: var(--cor-texto); font-size: 2.5rem;'>
-                            COMANDO 2026<br><span style='color: var(--cor-secundaria);'>INFORME DO DIA</span>
-                        </h1>
-                        <hr style='border: 2px solid var(--cor-texto); margin: 20px 0;'>
-                        <p style='font-size: 1.4rem; font-weight: bold; color: var(--cor-texto); line-height: 1.4;'>
-                            {m['Mensagem_Inicial']}
-                        </p>
-                    </div>
-                    <br>
-                """, unsafe_allow_html=True)
+                render_info_banner(
+                    titulo="COMANDO 2026<br><span style='color: var(--cor-secundaria);'>INFORME DO DIA</span>",
+                    subtítulo="",
+                    mensagem=m['Mensagem_Inicial']
+                )
 
                 if st.button("✅ LI AS INSTRUÇÕES E QUERO ENTRAR", width='stretch', type="primary"):
                     st.session_state["mensagem_exibida"] = True
@@ -415,11 +355,7 @@ if cargo_limpo == "colaborador":
 
     with tab_missoes:
         st.divider()
-        st.markdown(f"""
-            <div style='background-color: var(--cor-primaria); padding: 15px; border: 4px solid var(--cor-texto); box-shadow: 8px 8px 0px var(--cor-texto); text-align: center; margin-bottom: 25px;'>
-                <h2 style='margin:0; font-size: 1.8rem; font-style: italic; color: var(--cor-texto);'>REGISTRO DE PRESENÇA</h2>
-            </div>
-        """, unsafe_allow_html=True)
+        render_section_header("REGISTRO DE PRESENÇA")
 
         c1, c2 = st.columns(2)
         with c1:
@@ -430,11 +366,7 @@ if cargo_limpo == "colaborador":
                 modal_checkout(u, agora)
 
         st.divider()
-        st.markdown(f"""
-            <div style='background-color: var(--cor-primaria); padding: 15px; border: 4px solid var(--cor-texto); box-shadow: 8px 8px 0px var(--cor-texto); text-align: center; margin-bottom: 25px;'>
-                <h2 style='margin:0; font-size: 1.8rem; font-style: italic; color: var(--cor-texto);'>🚀 MISSÕES DIÁRIAS</h2>
-            </div>
-        """, unsafe_allow_html=True)
+        render_section_header("🚀 MISSÕES DIÁRIAS")
 
         t_txt = ""
         if m is not None:
@@ -468,13 +400,10 @@ if cargo_limpo == "colaborador":
                 registrar_acao(u['ID_Usuario'], "AÇÃO: INTERAÇÃO INSTAGRAM",
                                localizacao=st.session_state.get('last_coords'), feedback="", secrets=st.secrets,
                                error_log=st.session_state.get('error_log'))
-                st.markdown(f"""
-                    <a href="https://www.instagram.com/maxmacieldf/" target="_blank">
-                        <div style='background-color: var(--cor-texto); color: var(--cor-primaria); text-align: center; padding: 10px; border: 2px solid var(--cor-primaria); font-weight: bold; font-size: 0.8rem;'>
-                            ABRIR PERFIL DO MAX ↗️
-                        </div>
-                    </a>
-                """, unsafe_allow_html=True)
+                render_action_link_button(
+                    texto="ABRIR PERFIL DO MAX ↗️",
+                    url="https://www.instagram.com/maxmacieldf/"
+                )
 
         with col_m2:
             if st.button("💬 TRAGA UM NOVO AMIGO PARA SER COLABORADOR!", width='stretch', key="fixo_whats"):
@@ -483,23 +412,15 @@ if cargo_limpo == "colaborador":
                                error_log=st.session_state.get('error_log'))
                 mensagem_pronta = "Salve! Já acompanha o trabalho do Max Maciel pelo DF?? Sou colaborador dele e estou muito feliz com o trabalho que estamos fazendo. Vamos juntos nessa campanha? 🚀 https://forms.gle/NzJy6NEynbaPyD6w6"
                 msg_url = urllib.parse.quote(mensagem_pronta)
-                st.markdown(f"""
-                    <a href="https://wa.me/?text={msg_url}" target="_blank">
-                        <div style='background-color: var(--cor-texto); color: var(--cor-primaria); text-align: center; padding: 10px; border: 2px solid var(--cor-primaria); font-weight: bold; font-size: 0.8rem;'>
-                            ESCOLHER AMIGO ↗️
-                        </div>
-                    </a>
-                """, unsafe_allow_html=True)
+                render_action_link_button(
+                    texto="ESCOLHER AMIGO ↗️",
+                    url=f"https://wa.me/?text={msg_url}"
+                )
 
     with tab_contratos:
         st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
-        st.markdown(f"""
-            <div style='background-color: var(--cor-primaria); padding: 15px; border: 4px solid var(--cor-texto); box-shadow: 8px 8px 0px var(--cor-texto); text-align: center; margin-bottom: 20px;'>
-                <h2 style='margin:0; font-size: 1.3rem; font-family: "Archivo Black", sans-serif; font-style: italic; color: var(--cor-texto);'>📝 NOVO CONTRATO</h2>
-                <p style='margin:5px 0 0 0; font-size: 0.9rem; font-weight: bold;'>VOCÊ AINDA NÃO GEROU SEU CONTRATO?</p>
-            </div>
-        """, unsafe_allow_html=True)
+        render_section_header("📝 NOVO CONTRATO")
 
         url_formulario = "https://forms.gle/9fqxvN8XfCmTRh9EA"
         st.link_button("📋 PREENCHER DADOS PARA GERAR CONTRATO", url_formulario, width='stretch', type="primary")
@@ -574,16 +495,11 @@ elif cargo_limpo == "supervisor":
         if not msg_grupo.empty:
             m = msg_grupo.iloc[-1]
             if not st.session_state["mensagem_exibida"]:
-                st.markdown(f"""
-                    <div style='background-color: var(--cor-primaria); padding: 40px 20px; border: 5px solid var(--cor-texto); 
-                                box-shadow: 10px 10px 0px var(--cor-texto); text-align: center; margin-top: 20px;'>
-                        <h1 style='font-family: "Archivo Black", sans-serif; font-style: italic; color: var(--cor-texto); font-size: 2.5rem;'>
-                            COMANDO 2026<br><span style='color: var(--cor-secundaria);'>DIRETRIZES DE LIDERANÇA</span>
-                        </h1>
-                        <hr style='border: 2px solid var(--cor-texto); margin: 20px 0;'>
-                        <p style='font-size: 1.4rem; font-weight: bold; color: var(--cor-texto); line-height: 1.4;'>{m['Mensagem_Inicial']}</p>
-                    </div><br>
-                """, unsafe_allow_html=True)
+                render_info_banner(
+                    titulo="COMANDO 2026<br><span style='color: var(--cor-secundaria);'>DIRETRIZES DE LIDERANÇA</span>",
+                    subtítulo="",
+                    mensagem=m['Mensagem_Inicial']
+                )
                 if st.button("✅ CIENTE DAS DIRETRIZES", width='stretch', type="primary"):
                     st.session_state["mensagem_exibida"] = True
                     st.rerun()
@@ -618,9 +534,7 @@ elif cargo_limpo == "supervisor":
 
     with tab_missoes:
         st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-        st.markdown(
-            f"<div style='background-color: var(--cor-primaria); padding: 15px; border: 4px solid var(--cor-texto); box-shadow: 8px 8px 0px var(--cor-texto); text-align: center; margin-bottom: 25px;'><h2 style='margin:0; font-size: 1.8rem; font-style: italic; color: var(--cor-texto);'>MEU REGISTRO</h2></div>",
-            unsafe_allow_html=True)
+        render_section_header("MEU REGISTRO")
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🏁 ENTRADA (CHECK-IN)", width='stretch', key="sup_in"):
@@ -630,9 +544,7 @@ elif cargo_limpo == "supervisor":
                 modal_checkout(u, agora)
 
         st.divider()
-        st.markdown(
-            f"<div style='background-color: var(--cor-primaria); padding: 15px; border: 4px solid var(--cor-texto); box-shadow: 8px 8px 0px var(--cor-texto); text-align: center; margin-bottom: 25px;'><h2 style='margin:0; font-size: 1.8rem; font-style: italic; color: var(--cor-texto);'>🚀 MISSÕES DIÁRIAS</h2></div>",
-            unsafe_allow_html=True)
+        render_section_header("🚀 MISSÕES DIÁRIAS")
 
         t_txt = str(m.get('Tarefa_Direcionada', 'MISSÃO GERAL')).upper() if m is not None else "MISSÃO GERAL"
         with st.container(border=True):
@@ -654,9 +566,10 @@ elif cargo_limpo == "supervisor":
                 registrar_acao(u['ID_Usuario'], "AÇÃO: INTERAÇÃO INSTAGRAM",
                                localizacao=st.session_state.get('last_coords'), feedback="", secrets=st.secrets,
                                error_log=st.session_state.get('error_log'))
-                st.markdown(
-                    f"<a href='https://www.instagram.com/maxmacieldf/' target='_blank'><div style='background-color: var(--cor-texto); color: var(--cor-primaria); text-align: center; padding: 10px; font-weight: bold; font-size: 0.8rem;'>ABRIR PERFIL ↗️</div></a>",
-                    unsafe_allow_html=True)
+                render_action_link_button(
+                    texto="ABRIR PERFIL ↗️",
+                    url="https://www.instagram.com/maxmacieldf/"
+                )
         with cm2:
             if st.button("💬 WHATSAPP", width='stretch', key="sup_whats"):
                 registrar_acao(u['ID_Usuario'], "AÇÃO: MOBILIZAÇÃO WHATSAPP",
@@ -664,19 +577,15 @@ elif cargo_limpo == "supervisor":
                                error_log=st.session_state.get('error_log'))
                 msg_zap = urllib.parse.quote(
                     "Salve! Vamos juntos com Max Maciel 🚀 https://www.instagram.com/maxmacieldf/")
-                st.markdown(
-                    f"<a href='https://wa.me/?text={msg_zap}' target='_blank'><div style='background-color: var(--cor-texto); color: var(--cor-primaria); text-align: center; padding: 10px; font-weight: bold; font-size: 0.8rem;'>ENVIAR P/ AMIGO ↗️</div></a>",
-                    unsafe_allow_html=True)
+                render_action_link_button(
+                    texto="ENVIAR P/ AMIGO ↗️",
+                    url=f"https://wa.me/?text={msg_zap}"
+                )
 
     with tab_contratos:
         st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
-        st.markdown(f"""
-            <div style='background-color: var(--cor-primaria); padding: 15px; border: 4px solid var(--cor-texto); box-shadow: 8px 8px 0px var(--cor-texto); text-align: center; margin-bottom: 20px;'>
-                <h2 style='margin:0; font-size: 1.3rem; font-family: "Archivo Black", sans-serif; font-style: italic; color: var(--cor-texto);'>📝 NOVO CONTRATO</h2>
-                <p style='margin:5px 0 0 0; font-size: 0.9rem; font-weight: bold;'>VOCÊ AINDA NÃO GEROU SEU CONTRATO?</p>
-            </div>
-        """, unsafe_allow_html=True)
+        render_section_header("📝 NOVO CONTRATO")
 
         url_formulario = "https://forms.gle/9fqxvN8XfCmTRh9EA"
         st.link_button("📋 PREENCHER DADOS PARA GERAR CONTRATO", url_formulario, width='stretch', type="primary")
@@ -726,22 +635,11 @@ elif cargo_limpo == "supervisor":
             num_ativos = ativos_dia[ativos_dia['Tipo_Acao'].str.contains("Check-in")]['ID_Usuario'].nunique()
             total_acoes = len(ativos_dia)
 
-            espaco_metricas.markdown(f"""
-                <div style="display: flex; justify-content: space-between; gap: 5px; width: 100%; margin-bottom: 15px;">
-                    <div style="flex: 1; background: var(--cor-branco); border: 2px solid var(--cor-texto); box-shadow: 3px 3px 0px var(--cor-texto); text-align: center; padding: 5px;">
-                        <p style="margin: 0; font-size: 0.6rem; font-family: 'Archivo Black'; color: #666;">EQUIPE</p>
-                        <p style="margin: 0; font-size: 1.2rem; font-family: 'Archivo Black'; color: var(--cor-texto);">{total_vol}</p>
-                    </div>
-                    <div style="flex: 1; background: var(--cor-branco); border: 2px solid var(--cor-texto); box-shadow: 3px 3px 0px var(--cor-texto); text-align: center; padding: 5px;">
-                        <p style="margin: 0; font-size: 0.6rem; font-family: 'Archivo Black'; color: #666;">ATIVOS</p>
-                        <p style="margin: 0; font-size: 1.2rem; font-family: 'Archivo Black'; color: var(--cor-secundaria);">{num_ativos}</p>
-                    </div>
-                    <div style="flex: 1; background: var(--cor-branco); border: 2px solid var(--cor-texto); box-shadow: 3px 3px 0px var(--cor-texto); text-align: center; padding: 5px;">
-                        <p style="margin: 0; font-size: 0.6rem; font-family: 'Archivo Black'; color: #666;">AÇÕES</p>
-                        <p style="margin: 0; font-size: 1.2rem; font-family: 'Archivo Black'; color: var(--cor-texto);">{total_acoes}</p>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            render_metric_row([
+                {'label': 'EQUIPE', 'value': str(total_vol)},
+                {'label': 'ATIVOS', 'value': str(num_ativos), 'secondary': True},
+                {'label': 'AÇÕES', 'value': str(total_acoes)}
+            ])
 
             st.markdown(
                 f"<h3 style='font-size: 1.1rem; text-align: left; margin-top: -15px;'>📋 STATUS DA EQUIPE ({d_str[:5]})</h3>",
@@ -839,49 +737,12 @@ elif cargo_limpo == "admin":
         df_ticker = pd.merge(ultimos_logs_raw, df_usuarios[['ID_Usuario', 'Nome']], on='ID_Usuario', how='left')
         df_ticker['Nome'] = df_ticker['Nome'].fillna(df_ticker['ID_Usuario'])
 
-        frase_ticker = "  ///  ".join([
+        mensagens_ticker = [
             f"⚡ {str(row['Nome']).split()[0].upper()}: {str(row['Tipo_Acao']).split('|')[0].strip().upper()}"
             for _, row in df_ticker[::-1].iterrows()
-        ])
+        ]
 
-        conteudo_duplicado = f"{frase_ticker} /// {frase_ticker}"
-
-        st.markdown(f"""
-            <style>
-                @keyframes scroll {{
-                    0% {{ transform: translateX(0); }}
-                    100% {{ transform: translateX(-50%); }}
-                }}
-                .ticker-container {{
-                    width: 100%;
-                    overflow: hidden;
-                    background: var(--cor-primaria);
-                    border-top: 3px solid var(--cor-texto);
-                    border-bottom: 3px solid var(--cor-texto);
-                    padding: 8px 0;
-                    margin-bottom: 25px;
-                    white-space: nowrap;
-                    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
-                }}
-                .ticker-content {{
-                    display: inline-block;
-                    animation: scroll 45s linear infinite;
-                    font-family: 'Archivo Black', sans-serif;
-                    font-size: 0.9rem;
-                    color: var(--cor-texto);
-                    font-style: italic;
-                    text-transform: uppercase;
-                }}
-                .ticker-content:hover {{
-                    animation-play-state: paused;
-                }}
-            </style>
-            <div class="ticker-container">
-                <div class="ticker-content">
-                    {conteudo_duplicado}
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
+        render_ticker(mensagens_ticker)
 
     tab_hierarquia, tab_logs, tab_mapa, tab_mensagens, tab_cadastro, tab_contratos = st.tabs([
         "👥 EQUIPES", "📊 DASHBOARD", "🗺️ MAPA", "📝 MISSÕES", "➕ CADASTRO", "📄 CONTRATOS"
@@ -941,29 +802,14 @@ elif cargo_limpo == "admin":
                         logs_eq = df_logs[(df_logs['ID_Usuario'].isin(equipe['ID_Usuario'])) & (
                             df_logs['Data_Hora'].str.contains(hoje_str))]
                         ativos_hoje = logs_eq[logs_eq['Tipo_Acao'].str.contains("Check-in")]['ID_Usuario'].nunique()
-                        cor_ativos = "var(--cor-secundaria)" if ativos_hoje > 0 else "#666666"
 
-                        st.markdown(f"""
-                            <div style='background-color: var(--cor-branco); border: 4px solid var(--cor-texto); box-shadow: 6px 6px 0px var(--cor-texto); padding: 20px; margin-bottom: 12px;'>
-                                <div style='border-bottom: 3px solid var(--cor-texto); padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;'>
-                                    <div>
-                                        <h3 style='margin: 0; font-family: "Archivo Black", sans-serif; font-size: 1.5rem; color: var(--cor-secundaria); text-transform: uppercase;'>{sup['Nome']}</h3>
-                                        <span style='font-size: 0.8rem; color: #666; font-weight: bold;'>MACRO: {sup['Macro_Grupo']}</span>
-                                    </div>
-                                    <span style='background-color: var(--cor-primaria); border: 2px solid var(--cor-texto); padding: 4px 10px; font-family: "Archivo Black", sans-serif; font-size: 0.8rem;'>{sup['ID_Grupo']}</span>
-                                </div>
-                                <div style='display: flex; gap: 15px;'>
-                                    <div style='flex: 1; background-color: var(--cor-fundo); border: 2px solid var(--cor-texto); padding: 12px; text-align: center;'>
-                                        <div style='font-family: "Archivo Black", sans-serif; font-size: 0.85rem; color: #666;'>EQUIPE</div>
-                                        <div style='font-family: "Archivo Black", sans-serif; font-size: 2.2rem; color: var(--cor-texto); line-height: 1; margin-top: 5px;'>{qtd_equipe}</div>
-                                    </div>
-                                    <div style='flex: 1; background-color: var(--cor-fundo); border: 2px solid var(--cor-texto); padding: 12px; text-align: center;'>
-                                        <div style='font-family: "Archivo Black", sans-serif; font-size: 0.85rem; color: #666;'>ATIVOS</div>
-                                        <div style='font-family: "Archivo Black", sans-serif; font-size: 2.2rem; color: {cor_ativos}; line-height: 1; margin-top: 5px;'>{ativos_hoje}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        render_team_card(
+                            supervisor=sup['Nome'],
+                            macro_grupo=sup['Macro_Grupo'],
+                            id_grupo=sup['ID_Grupo'],
+                            qtd_equipe=qtd_equipe,
+                            ativos_hoje=ativos_hoje
+                        )
 
                         raw_w_sup = str(sup.get('WhatsApp', '')).strip()
                         w_sup_limpo = sanitize_whatsapp(raw_w_sup)
@@ -989,12 +835,7 @@ elif cargo_limpo == "admin":
                             if not equipe.empty:
                                 for _, vol in equipe.iterrows():
                                     w_vol = sanitize_whatsapp(vol.get('WhatsApp', ''))
-                                    st.markdown(f"""
-                                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 8px 0;">
-                                            <span style="font-size: 0.9rem; font-weight: bold; color: var(--cor-texto);">{vol['Nome'].upper()}</span>
-                                            <a href="https://wa.me/{w_vol}" target="_blank" style="background-color: #25D366; color: #FFFFFF; font-size: 0.7rem; padding: 4px 10px; border: 2px solid var(--cor-texto); text-decoration: none; font-weight: bold; white-space: nowrap;">CHAMAR</a>
-                                        </div>
-                                    """, unsafe_allow_html=True)
+                                    render_contract_entry(vol['Nome'], w_vol)
                             else:
                                 st.caption("Sem voluntários.")
 
@@ -1579,16 +1420,7 @@ elif cargo_limpo == "suporte":
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"""
-        <div style='background-color: var(--cor-secundaria); padding: 20px; border: 4px solid var(--cor-texto); 
-                    box-shadow: 8px 8px 0px var(--cor-texto); text-align: center; margin-bottom: 25px;'>
-            <h1 style='margin:0; font-family: "Archivo Black", sans-serif; font-style: italic; 
-                       color: var(--cor-branco); font-size: 2.5rem;'>🛠️ PAINEL DE SUPORTE TÉCNICO</h1>
-            <p style='margin:10px 0 0 0; color: var(--cor-primaria); font-weight: bold;'>
-                DEBUG • MONITORAMENTO • DIAGNÓSTICO
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_support_panel()
 
     df_usuarios = carregar_dados("Usuarios", st.secrets["planilha"]["id"], st.session_state.get('error_log'))
     df_logs = carregar_dados("Logs", st.secrets["planilha"]["id"], st.session_state.get('error_log'))
@@ -1609,48 +1441,36 @@ elif cargo_limpo == "suporte":
                 c1, c2, c3, c4 = st.columns(4)
 
                 with c1:
-                    st.markdown(f"""
-                        <div style='background-color: {"#00FF00" if diagnostico["sheets"]["status"] == "✅" else "#FF0000"}; 
-                                    border: 3px solid var(--cor-texto); padding: 15px; text-align: center; 
-                                    box-shadow: 4px 4px 0px var(--cor-texto);'>
-                            <h3 style='margin:0; color: var(--cor-texto);'>GOOGLE SHEETS</h3>
-                            <p style='font-size: 2rem; margin:10px 0;'>{diagnostico["sheets"]["status"]}</p>
-                            <p style='font-size: 0.8rem; margin:0; color: var(--cor-texto);'>{diagnostico["sheets"]["msg"]}</p>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    render_diagnostic_card(
+                        titulo="GOOGLE SHEETS",
+                        status=diagnostico["sheets"]["status"],
+                        mensagem=diagnostico["sheets"]["msg"],
+                        cor_fundo="#00FF00" if diagnostico["sheets"]["status"] == "✅" else "#FF0000"
+                    )
 
                 with c2:
-                    st.markdown(f"""
-                        <div style='background-color: {"#00FF00" if diagnostico["drive"]["status"] == "✅" else "#FF0000"}; 
-                                    border: 3px solid var(--cor-texto); padding: 15px; text-align: center; 
-                                    box-shadow: 4px 4px 0px var(--cor-texto);'>
-                            <h3 style='margin:0; color: var(--cor-texto);'>GOOGLE DRIVE</h3>
-                            <p style='font-size: 2rem; margin:10px 0;'>{diagnostico["drive"]["status"]}</p>
-                            <p style='font-size: 0.8rem; margin:0; color: var(--cor-texto);'>{diagnostico["drive"]["msg"]}</p>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    render_diagnostic_card(
+                        titulo="GOOGLE DRIVE",
+                        status=diagnostico["drive"]["status"],
+                        mensagem=diagnostico["drive"]["msg"],
+                        cor_fundo="#00FF00" if diagnostico["drive"]["status"] == "✅" else "#FF0000"
+                    )
 
                 with c3:
-                    st.markdown(f"""
-                        <div style='background-color: {"#00FF00" if diagnostico["planilha"]["status"] == "✅" else "#FF0000"}; 
-                                    border: 3px solid var(--cor-texto); padding: 15px; text-align: center; 
-                                    box-shadow: 4px 4px 0px var(--cor-texto);'>
-                            <h3 style='margin:0; color: var(--cor-texto);'>PLANILHA</h3>
-                            <p style='font-size: 2rem; margin:10px 0;'>{diagnostico["planilha"]["status"]}</p>
-                            <p style='font-size: 0.8rem; margin:0; color: var(--cor-texto);'>{diagnostico["planilha"]["msg"]}</p>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    render_diagnostic_card(
+                        titulo="PLANILHA",
+                        status=diagnostico["planilha"]["status"],
+                        mensagem=diagnostico["planilha"]["msg"],
+                        cor_fundo="#00FF00" if diagnostico["planilha"]["status"] == "✅" else "#FF0000"
+                    )
 
                 with c4:
-                    st.markdown(f"""
-                        <div style='background-color: {"#00FF00" if diagnostico["cache"]["status"] == "✅" else "#FF0000"}; 
-                                    border: 3px solid var(--cor-texto); padding: 15px; text-align: center; 
-                                    box-shadow: 4px 4px 0px var(--cor-texto);'>
-                            <h3 style='margin:0; color: var(--cor-texto);'>CACHE</h3>
-                            <p style='font-size: 2rem; margin:10px 0;'>{diagnostico["cache"]["status"]}</p>
-                            <p style='font-size: 0.8rem; margin:0; color: var(--cor-texto);'>{diagnostico["cache"]["msg"]}</p>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    render_diagnostic_card(
+                        titulo="CACHE",
+                        status=diagnostico["cache"]["status"],
+                        mensagem=diagnostico["cache"]["msg"],
+                        cor_fundo="#00FF00" if diagnostico["cache"]["status"] == "✅" else "#FF0000"
+                    )
 
                 st.markdown("<br>", unsafe_allow_html=True)
 

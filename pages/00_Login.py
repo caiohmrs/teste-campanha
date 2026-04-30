@@ -11,6 +11,7 @@ from datetime import datetime
 
 from funcoes import carregar_dados, get_agora_br
 from utils.styles import inject_styles
+from utils.components import render_login_header, render_login_box
 
 # =============================================================================
 # CONFIGURAÇÃO INICIAL
@@ -52,20 +53,10 @@ st.markdown("<br><br>", unsafe_allow_html=True)
 col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
 
 with col_l2:
-    st.markdown(f"""
-        <h1 style='text-align: center; font-size: 4rem; line-height: 0.9; margin-bottom: 20px; margin-top: -100px'>
-            Max Maciel<br><span style='color: var(--cor-secundaria);'>🧢 2026</span>
-        </h1>
-    """, unsafe_allow_html=True)
+    render_login_header()
 
     with st.container():
-        st.markdown(f"""
-            <div style='background-color: var(--cor-primaria); padding: 15px; border: 4px solid var(--cor-texto); box-shadow: 10px 10px 0px var(--cor-texto); text-align: center;'>
-                <h2 style='margin-top: 0; font-size: 1.5rem; font-family: "Archivo Black", sans-serif; font-style: italic; text-transform: uppercase; color: var(--cor-texto);'>
-                    Faça seu login abaixo:
-                </h2>
-            </div>
-        """, unsafe_allow_html=True)
+        render_login_box()
         st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
 
         email_input = st.text_input(

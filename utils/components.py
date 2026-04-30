@@ -1,0 +1,221 @@
+# =============================================================================
+# COMPONENTS.PY - COMPONENTES REUTILIZÁVEIS "COMANDO 2026"
+# =============================================================================
+# 
+# Este arquivo contém funções que renderizam componentes HTML/CSS reutilizáveis.
+# Todos os estilos estão definidos em utils/styles.py
+# 
+# =============================================================================
+
+import streamlit as st
+import urllib.parse
+
+
+def render_login_header():
+    """Renderiza o cabeçalho da tela de login."""
+    st.markdown(f"""
+        <h1 class="login-header">
+            Max Maciel<br><span class="login-header-subtitle">🧢 2026</span>
+        </h1>
+    """, unsafe_allow_html=True)
+
+
+def render_login_box():
+    """Renderiza a caixa de login."""
+    st.markdown("""
+        <div class="login-box">
+            <h2>Faça seu login abaixo:</h2>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_welcome_banner(nome_usuario):
+    """Renderiza o banner de boas-vindas do usuário."""
+    nome_primeiro = nome_usuario.split()[0].upper()
+    st.markdown(f"""
+        <div class="welcome-banner">
+            <h3 class="welcome-banner-title">BEM-VINDO,</h3>
+            <h1 class="welcome-banner-name">{nome_primeiro}</h1>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_status_bar(qtd_acoes, ativo):
+    """Renderiza a barra de status (ações hoje + status)."""
+    status_texto = "ATIVO" if qtd_acoes > 0 else "OFF"
+    st.markdown(f"""
+        <div class="status-bar">
+            <span class="status-bar-item">
+                <span class="status-bar-dot">●</span> AÇÕES HOJE: {qtd_acoes}
+            </span>
+            <span class="status-bar-item">
+                <span class="status-bar-dot">●</span> STATUS: {status_texto}
+            </span>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_section_header(titulo):
+    """Renderiza um cabeçalho de seção."""
+    st.markdown(f"""
+        <div class="section-header">
+            <h2>{titulo}</h2>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_modal_header(titulo):
+    """Renderiza o cabeçalho de um modal/dialog."""
+    st.markdown(f"""
+        <div class="modal-header">
+            <h2>{titulo}</h2>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_info_banner(titulo, subtítulo, mensagem):
+    """Renderiza o banner de informações do dia."""
+    st.markdown(f"""
+        <div class="info-banner">
+            <h1>{titulo}<br><span class="info-banner-subtitle">{subtítulo}</span></h1>
+            <hr>
+            <p>{mensagem}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_ticker(mensagens):
+    """Renderiza o ticker animado de ações recentes (Admin)."""
+    frase = "  ///  ".join(mensagens)
+    conteudo_duplicado = f"{frase} /// {frase}"
+    st.markdown(f"""
+        <div class="ticker-container">
+            <div class="ticker-content">
+                {conteudo_duplicado}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_team_card(supervisor, macro_grupo, id_grupo, qtd_equipe, ativos_hoje):
+    """Renderiza um card de equipe (Supervisor/Admin)."""
+    cor_ativos = "var(--cor-secundaria)" if ativos_hoje > 0 else "#666666"
+    st.markdown(f"""
+        <div class="team-card">
+            <div class="team-card-header">
+                <div>
+                    <h3 class="team-card-name">{supervisor}</h3>
+                    <span class="team-card-macro">MACRO: {macro_grupo}</span>
+                </div>
+                <span class="team-card-badge">{id_grupo}</span>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <div class="team-card-metric">
+                    <div class="team-card-metric-label">EQUIPE</div>
+                    <div class="team-card-metric-value">{qtd_equipe}</div>
+                </div>
+                <div class="team-card-metric">
+                    <div class="team-card-metric-label">ATIVOS</div>
+                    <div class="team-card-metric-value" style="color: {cor_ativos};">{ativos_hoje}</div>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_metric_card(label, value, secondary=False):
+    """Renderiza um card de métrica."""
+    classe_valor = "metric-card-value-secondary" if secondary else ""
+    st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-card-label">{label}</div>
+            <div class="metric-card-value {classe_valor}">{value}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_support_panel():
+    """Renderiza o painel de suporte técnico."""
+    st.markdown("""
+        <div class="support-panel">
+            <h1>🛠️ PAINEL DE SUPORTE TÉCNICO</h1>
+            <p>DEBUG • MONITORAMENTO • DIAGNÓSTICO</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_diagnostic_card(titulo, status, mensagem, cor_fundo):
+    """Renderiza um card de diagnóstico."""
+    st.markdown(f"""
+        <div class="diagnostic-card" style="background-color: {cor_fundo};">
+            <h3>{titulo}</h3>
+            <p class="diagnostic-card-status">{status}</p>
+            <p class="diagnostic-card-msg">{mensagem}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_log_entry(acao, hora, feedback=None, localizacao=None):
+    """Renderiza uma entrada de log."""
+    badge_html = ""
+    if feedback and "Check-out" in acao:
+        badge_html = f"<span class=\"log-entry-badge\">{feedback.split('|')[0]}</span>"
+    
+    mapa_html = ""
+    if localizacao and "," in str(localizacao):
+        mapa_html = f"""<div>
+            <a href="https://www.google.com/maps?q={localizacao}" target="_blank" class="log-entry-map-btn">📍 MAPA</a>
+        </div>"""
+    
+    st.markdown(f"""
+        <div class="log-entry">
+            <div style="text-align:left;">
+                <span class="log-entry-action">{acao}</span>{badge_html}
+                <br><span class="log-entry-time">🕒 {hora}</span>
+            </div>
+            {mapa_html}
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_contract_entry(nome, whatsapp):
+    """Renderiza uma entrada de contrato/colaborador."""
+    st.markdown(f"""
+        <div class="contract-card">
+            <span class="contract-card-name">{nome.upper()}</span>
+            <a href="https://wa.me/{whatsapp}" target="_blank" class="contract-card-btn">CHAMAR</a>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def render_action_link_button(texto, url):
+    """Renderiza um botão de link de ação."""
+    st.markdown(f"""
+        <a href="{url}" target="_blank">
+            <div class="action-link-btn">{texto}</div>
+        </a>
+    """, unsafe_allow_html=True)
+
+
+def render_metric_row(metrics):
+    """
+    Renderiza uma linha de métricas pequenas.
+    
+    Args:
+        metrics: Lista de dicionários com 'label', 'value', 'secondary' (opcional)
+    """
+    items_html = ""
+    for m in metrics:
+        classe_valor = "metric-row-value-secondary" if m.get('secondary', False) else ""
+        items_html += f"""
+            <div class="metric-row-item">
+                <p class="metric-row-label">{m['label']}</p>
+                <p class="metric-row-value {classe_valor}">{m['value']}</p>
+            </div>
+        """
+    
+    st.markdown(f"""
+        <div class="metric-row">
+            {items_html}
+        </div>
+    """, unsafe_allow_html=True)
