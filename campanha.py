@@ -4,11 +4,12 @@
 # 
 # Este arquivo é apenas o ponto de entrada da aplicação.
 # Toda a lógica está em:
-#   - pages/00_Login.py (Tela de login)
-#   - pages/01_Principal.py (Painel principal pós-login)
+#   - pages/_00_Login.py (Tela de login)
+#   - pages/_01_Principal.py (Painel principal pós-login)
 #   - utils/styles.py (Estilização CSS centralizada)
 #   - funcoes.py (Funções utilitárias e conexões)
 # =============================================================================
+
 
 import streamlit as st
 from utils.styles import inject_styles
@@ -23,6 +24,22 @@ st.set_page_config(
     layout="wide"
 )
 
+inject_styles()
+
+# =============================================================================
+# CONFIGURAR NAVEGAÇÃO COM PÁGINAS OCULTAS
+# =============================================================================
+
+login_page = st.Page("pages/_00_Login.py", title="Login", icon="🏠", default=True)
+principal_page = st.Page("pages/_01_Principal.py", title="Principal", icon="🚀")
+
+# Navegação com páginas ocultas da sidebar
+pg = st.navigation(
+    pages=[login_page, principal_page],
+    position="hidden"  # ← Isso esconde o menu de navegação
+)
+
+pg.run()
 # =============================================================================
 # INJETAR ESTILOS CENTRALIZADOS
 # =============================================================================
@@ -33,4 +50,4 @@ inject_styles()
 # REDIRECIONAR PARA LOGIN
 # =============================================================================
 
-st.switch_page("pages/00_Login.py")
+st.switch_page("pages/_00_Login.py")
