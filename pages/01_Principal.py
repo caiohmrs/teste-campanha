@@ -636,11 +636,15 @@ elif cargo_limpo == "supervisor":
             num_ativos = ativos_dia[ativos_dia['Tipo_Acao'].str.contains("Check-in")]['ID_Usuario'].nunique()
             total_acoes = len(ativos_dia)
 
-            render_metric_row([
-                {'label': 'EQUIPE', 'value': str(total_vol)},
-                {'label': 'ATIVOS', 'value': str(num_ativos), 'secondary': True},
-                {'label': 'AÇÕES', 'value': str(total_acoes)}
-            ])
+            with espaco_metricas:
+                render_metric_row([
+                    {'label': 'EQUIPE', 'value':
+                        str(total_vol)},
+                    {'label': 'ATIVOS', 'value':
+                        str(num_ativos), 'secondary': True},
+                    {'label': 'AÇÕES', 'value':
+                        str(total_acoes)}
+                ])
 
             st.markdown(f'''
     <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px; font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);">
