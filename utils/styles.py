@@ -223,6 +223,8 @@ def get_css():
             button[data-baseweb="tab"] {{
                 font-size: 0.7rem !important;
                 padding: 8px 10px !important;
+                
+                
             }}
         }}
 
