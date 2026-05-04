@@ -79,7 +79,13 @@ def get_css():
             --fonte-texto: {ESTILO['fonte_texto']};
         }}
 
-        /* 1. CONFIGURAÇÕES GERAIS DA APP */
+        /* 1. CONFIGURAÇÕES GERAIS E CONTAINER */
+        .block-container {{
+            padding-top: 2rem !important;
+            max-width: 1100px !important; /* Impede que o app estique demais no PC */
+            margin: 0 auto !important;
+        }}
+
         [data-testid="stVerticalBlock"] > div {{
             width: 100%;
         }}
@@ -123,7 +129,6 @@ def get_css():
             border-radius: var(--border-radius) !important;
             text-transform: uppercase !important;
             box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
-            width: 100% !important;
             min-height: 3.5rem !important;
             display: flex !important;
             align-items: center !important;
@@ -132,7 +137,7 @@ def get_css():
 
         /* 5. TABS */
         div[data-baseweb="tab-list"] {{
-            gap: 0px !important;
+            gap: 8px !important;
             background-color: transparent !important;
             padding: 10px 0 !important;
             display: flex !important;
@@ -151,7 +156,7 @@ def get_css():
             color: var(--cor-texto) !important;
             box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
             transition: 0.2s !important;
-            margin: 0 6px 10px 6px !important;
+            margin: 0 !important;
             transform: none !important;
         }}
 
@@ -213,18 +218,34 @@ def get_css():
             color: var(--cor-texto) !important;
         }}
 
-        /* 9. CONTAINER PRINCIPAL */
-        .block-container {{
-            padding-top: 2rem !important;
-        }}
-
         /* 10. RESPONSIVIDADE (MOBILE) */
         @media (max-width: 768px) {{
+            .block-container {{
+                padding: 1rem !important;
+                max-width: 100% !important;
+            }}
+
+            /* Força as abas a quebrarem linha e não vazarem da tela */
+            div[data-baseweb="tab-list"] {{
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 5px !important;
+            }}
+
             button[data-baseweb="tab"] {{
                 font-size: 0.7rem !important;
                 padding: 8px 10px !important;
-                
-                
+                flex: 1 1 auto !important; /* Ajusta o tamanho automaticamente */
+                margin: 2px !important;
+            }}
+
+            button[data-baseweb="tab"] p {{
+                font-size: 0.7rem !important;
+            }}
+
+            /* No mobile, os botões voltam a ocupar a largura total */
+            .stButton > button {{
+                width: 100% !important;
             }}
         }}
 
