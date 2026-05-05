@@ -73,6 +73,11 @@ cookie_manager = stx.CookieManager()
 if "error_log" not in st.session_state:
     st.session_state["error_log"] = []
 
+# ---------- INICIALIZAÇÃO DE VARIÁVEL DE SESSÃO ----------
+if "mensagem_exibida" not in st.session_state:
+    st.session_state["mensagem_exibida"] = False
+# -----------------------------------------------------
+
 # CAPTURA DE VARIÁVEIS DO USUÁRIO
 u = st.session_state["usuario_logado"]
 cargo_limpo = str(u['Cargo']).strip().lower()
@@ -394,7 +399,7 @@ with tab_cadastro:
                     "SUPERVISOR RESPONSÁVEL:",
                     options=["NENHUM / PRÓPRIO SUPERVISOR"] + lista_nomes_exibicao
                 )
-            if st.form_submit_button("✅ CADASTRAR INTEGRANTE", type="primary", width='stretch'):
+            if st.form_submit_button("✅ CADASTRAR INTEGRANTE", type="primary", width="stretch"):
                 if n_id and n_nome and n_whats:
                     if n_grupo == "Nenhum grupo cadastrado":
                         st.error("⚠️ Cadastre pelo menos um grupo antes de criar usuários!")
@@ -549,7 +554,7 @@ with tab_contratos:
                             link = salvar_documento_drive(arq_pdf, f"ORIGINAL_{n_doc}_{u_destino}",
                                                          st.secrets, st.session_state.get('error_log'))
                             if link and registrar_novo_contrato_admin(u_destino, n_doc, link,
-                                                                      st.secrets, st.session_state.get('error_log')):
+                                                                   st.secrets, st.session_state.get('error_log')):
                                 st.success("✅ DOCUMENTO ENVIADO COM SUCESSO!")
                                 st.cache_data.clear()
                                 time.sleep(1)

@@ -36,6 +36,11 @@ if "logout_em_andamento" not in st.session_state:
 if "error_log" not in st.session_state:
     st.session_state["error_log"] = []
 
+# ---------- INICIALIZAÇÃO DE VARIÁVEIS DE SESSÃO ----------
+if "mensagem_exibida" not in st.session_state:
+    st.session_state["mensagem_exibida"] = False
+# -------------------------------------------------------
+
 # Redirecionar se não logado
 if st.session_state["usuario_logado"] is None:
     st.switch_page("pages/00_Login.py")

@@ -73,6 +73,11 @@ cookie_manager = stx.CookieManager()
 if "error_log" not in st.session_state:
     st.session_state["error_log"] = []
 
+# ---------- INICIALIZAÇÃO DE VARIÁVEL DE SESSÃO ----------
+if "mensagem_exibida" not in st.session_state:
+    st.session_state["mensagem_exibida"] = False
+# -----------------------------------------------------
+
 # CAPTURA DE VARIÁVEIS DO USUÁRIO
 u = st.session_state["usuario_logado"]
 cargo_limpo = str(u['Cargo']).strip().lower()
@@ -300,7 +305,7 @@ if cargo_limpo == "supervisor":
         st.link_button("📋 PREENCHER DADOS PARA GERAR CONTRATO", url_formulario, width='stretch', type="primary")
         st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
         st.divider()
-        st.subheader("📄 Meus Documentos")
+        st.subheader("📄 MEUS DOCUMENTOS")
         df_contratos = carregar_dados("Contratos", st.secrets["planilha"]["id"], st.session_state.get('error_log'))
         if df_contratos is not None:
             meus_docs = df_contratos[df_contratos['ID_Usuario'].astype(str) == str(u['ID_Usuario'])]
@@ -347,7 +352,7 @@ if cargo_limpo == "supervisor":
             total_acoes = len(ativos_dia)
 
             st.markdown(f'''
-                <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px; font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);">
+                <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px; font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);'>
                     📋 STATUS DA EQUIPE ({d_str[:5]})
                 </h3>
                 ''', unsafe_allow_html=True)

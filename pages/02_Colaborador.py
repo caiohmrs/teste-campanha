@@ -73,6 +73,11 @@ cookie_manager = stx.CookieManager()
 if "error_log" not in st.session_state:
     st.session_state["error_log"] = []
 
+# ---------- INICIALIZAÇÃO DE VARIÁVEL DE SESSÃO ----------
+if "mensagem_exibida" not in st.session_state:
+    st.session_state["mensagem_exibida"] = False
+# -----------------------------------------------------
+
 # =============================================================================
 # CAPTURA DE VARIÁVEIS DO USUÁRIO
 # =============================================================================

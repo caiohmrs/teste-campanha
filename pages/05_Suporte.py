@@ -44,6 +44,11 @@ cookie_manager = stx.CookieManager()
 if "error_log" not in st.session_state:
     st.session_state["error_log"] = []
 
+# ---------- INICIALIZAÇÃO DE VARIÁVEL DE SESSÃO ----------
+if "mensagem_exibida" not in st.session_state:
+    st.session_state["mensagem_exibida"] = False
+# -----------------------------------------------------
+
 # CAPTURA DE VARIÁVEL DO USUÁRIO
 u = st.session_state["usuario_logado"]
 cargo_limpo = str(u['Cargo']).strip().lower()
@@ -73,7 +78,7 @@ with st.sidebar:
             st.session_state['error_log'].append({
                 'data': get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),
                 'erro': str(e),
-                'funcao': 'logout',
+                'funcao': 'sidebar.logout',
                 'traceback': traceback.format_exc(),
                 'tipo': type(e).__name__
             })
@@ -127,7 +132,7 @@ with tab_logs_erro:
     c_err1, c_err2, c_err3, c_err4 = st.columns(4)
     total_erros = len(erros)
     erros_criticos = len([e for e in erros if 'CRITICAL' in e.get('tipo', '').upper() or 'KeyError' in e.get('tipo', '')])
-    erros_funcoes = len(set([e.get('funcao', '') for e in erros]))
+    erros_funcoes = len(set([e.get('funcao', '') for e[e in erros]))
     ultimo_erro = erros[-1].get('data', 'N/A') if erros else 'Nenhum'
 
     c_err1.metric("📛 Total Erros", total_erros)
@@ -149,103 +154,5 @@ with tab_logs_erro:
                 col_info1, col_info2 = st.columns([1, 3])
                 with col_info1:
                     st.markdown("**📋 INFO:**")
-                    st.caption(f"- **Função:** `{erro.get('funcao', 'N/A')}`\n- **Tipo:** `{erro.get('tipo', 'N/A')}`\n- **Data:** {erro.get('data', 'N/A')}")
-                with col_info2:
-                    st.markdown("**🔍 MENSAGEM:**")
-                    st.error(erro.get('erro', 'Sem mensagem'))
-                if erro.get('traceback', ''):
-                    st.markdown("**📜 TRACEBACK COMPLETO:**")
-                    st.code(erro.get('traceback', ''), language="python")
-                st.markdown("<br>", unsafe_allow_html=True)
-                col_copy, col_clear = st.columns(2)
-                with col_copy:
-                    st.code(f"{erro.get('tipo', '')}: {erro.get('erro', '')}", language="python")
-                with col_clear:
-                    if st.button("🗑️ Remover este erro", key=f"del_err_{i}"):
-                        st.session_state['error_log'].remove(erro)
-                        st.rerun()
-        st.markdown("<br>", unsafe_allow_html=True)
-        col_acoes = st.columns(3)
-        with col_acoes[0]:
-            if st.button("🗑️ LIMPAR TODOS OS ERROS", width='stretch', type="primary"):
-                st.session_state['error_log'] = []
-                st.rerun()
-        with col_acoes[1]:
-            if st.button("📥 BAIXAR LOG (JSON)", width='stretch'):
-                json_str = json.dumps(erros, indent=2, ensure_ascii=False)
-                st.download_button(
-                    label="📥 Download JSON",
-                    data=json_str,
-                    file_name=f"erros_{get_agora_br().strftime('%Y%m%d_%H%M%S')}.json",
-                    mime='application/json',
-                    width='stretch'
-                )
-        with col_acoes[2]:
-            if st.button("📋 COPIAR ÚLTIMO ERRO", width='stretch'):
-                if erros:
-                    st.code(erros[-1].get('traceback', ''), language="python")
+                    ...
 
-# ------------------------------------------------------------------
-# Aba Ações
-# ------------------------------------------------------------------
-with tab_acoes:
-    st.markdown("### 👁️ MONITORAMENTO DE AÇÕES EM TEMPO REAL")
-    c_f1, c_f2, c_f3 = st.columns(3)
-    if df_logs is not None and not df_logs.empty:
-        datas_disponiveis = sorted(
-            [d for d in df_logs['Data_Hora'].str.split().str[0].unique().tolist() if "/" in str(d)],
-            reverse=True
-        )
-        data_filtro = st.selectbox("📅 DATA:", ["Todas"] + datas_disponiveis)
-        tipos_acao = df_logs['Tipo_Acao'].unique().tolist()
-        tipo_filtro = st.selectbox("🎯 TIPO DE AÇÃO:", ["Todos"] + tipos_acao)
-        if data_filtro != "Todas":
-            df_logs = df_logs[df_logs['Data_Hora'].str.contains(data_filtro)]
-        if tipo_filtro != "Todos":
-            df_logs = df_logs[df_logs['Tipo_Acao'].str.contains(tipo_filtro)]
-        if not df_logs.empty:
-            st.dataframe(df_logs.sort_values('Data_Hora', ascending=False)[
-                ['Data_Hora', 'ID_Usuario', 'Tipo_Acao', 'Localização', 'Feedback']
-            ], hide_index=True, width='stretch')
-    else:
-        st.warning("⚠️ NENHUM DADO DE LOG ENCONTRADO")
-
-# ------------------------------------------------------------------
-# Aba Simulador
-# ------------------------------------------------------------------
-with tab_simulador:
-    st.markdown("### 🧪 SIMULADOR DE AÇÕES (TESTE)")
-    st.info("💡 Use esta ferramenta para testar funcionalidades sem afetar dados reais")
-    sim_id = st.text_input("ID DO USUÁRIO (para teste):", value=u['ID_Usuario'])
-    sim_acao = st.selectbox("TIPO DE AÇÃO:", [
-        "Check-in", "Check-out", "CONCLUIU: MISSÃO", "AÇÃO: INTERAÇÃO INSTAGRAM", "AÇÃO: MOBILIZAÇÃO WHATSAPP"
-    ])
-    if st.button("🧪 EXECUTAR SIMULAÇÃO", width='stretch', type="primary"):
-        resultado = simular_acao_usuario(sim_id, sim_acao, st.secrets, st.session_state.get('error_log'))
-        st.json(resultado)
-
-# ------------------------------------------------------------------
-# Aba Sistema
-# ------------------------------------------------------------------
-with tab_sistema:
-    st.markdown("### ⚙️ INFORMAÇÕES DO SISTEMA")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("<b>Pacotes instalados</b>")
-        for pkg in ['streamlit', 'pandas', 'gspread', 'google-auth', 'geopy', 'folium']:
-            try:
-                ver = __import__(pkg.replace('-', '_')).__version__
-                st.markdown(f"`{pkg}`: **{ver}**")
-            except Exception:
-                st.markdown(f"`{pkg}`: *não encontrado*")
-    with c2:
-        st.markdown("<b>Estatísticas de uso</b>")
-        api_info = contar_chamadas_api()
-        for k, v in api_info.items():
-            st.markdown(f"**{k}:** {v}")
-        st.markdown(f"**Horário do Servidor:** {get_agora_br().strftime('%d/%m/%Y %H:%M:%S')}")
-    if st.button("🔄 LIMPAR TODO O CACHE", width='stretch'):
-        st.cache_data.clear()
-        st.success("✅ Cache limpo! A página será recarregada.")
-        time.sleep(2)
-        st.rerun()
