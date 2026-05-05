@@ -132,7 +132,8 @@ with tab_logs_erro:
     c_err1, c_err2, c_err3, c_err4 = st.columns(4)
     total_erros = len(erros)
     erros_criticos = len([e for e in erros if 'CRITICAL' in e.get('tipo', '').upper() or 'KeyError' in e.get('tipo', '')])
-    erros_funcoes = len(set([e.get('funcao', '') for e[e in erros]))
+    # Correção da expressão de compreensão: usar 'e in erros' corretamente
+    erros_funcoes = len(set([e.get('funcao', '') for e in erros]))
     ultimo_erro = erros[-1].get('data', 'N/A') if erros else 'Nenhum'
 
     c_err1.metric("📛 Total Erros", total_erros)
@@ -156,3 +157,4 @@ with tab_logs_erro:
                     st.markdown("**📋 INFO:**")
                     ...
 
+# Nota: As demais abas (tab_acoes, tab_simulador, tab_sistema) permanecem inalteradas.
