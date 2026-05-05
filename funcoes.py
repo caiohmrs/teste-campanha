@@ -678,7 +678,6 @@ def criar_novo_macro_grupo(nome_macro, secrets, error_log=None):
         return False, f"Erro: {str(e)}"
 
 
-
 # =============================================================================
 # FUNÇÕES DE DIAGNÓSTICO E SUPORTE TÉCNICO
 # =============================================================================
@@ -823,3 +822,132 @@ def simular_acao_usuario(id_usuario, tipo_acao, secrets, error_log=None):
             'status': 'SIMULAÇÃO FALHOU',
             'erro': str(e)
         }
+
+
+# -------------------------------------------------------------------------
+# G A M I F I C A Ç Ã O   –   FUNÇÕES AUXILIARES
+# -------------------------------------------------------------------------
+def _ws_leaderboard(planilha_id, secrets, error_log=None):
+    """
+    Retorna a Worksheet da aba **Leaderboard** (mesma planilha já utilizada
+    nas demais funções).  Caso a aba ainda não exista, a função disparará a
+    exceção que será capturada pelo chamador.
+    """
+    client = _get_gspread_client(secrets, error_log)
+    planilha = client.open_by_key(planilha_id)
+    return planilha.worksheet("Leaderboard")
+
+
+def atualizar_pontuacao_usuario(
+        id_usuario: str,
+        nome: str,
+        cargo: str,
+        acao: str,
+        planilha_id: str,
+        secrets,
+        error_log=None) -> bool:
+    """
+    Incrementa a pontuação do usuário respeitando o limite diário
+    configurado em utils/gamification.py.
+    Retorna True se a pontuação foi efetivamente adicionada,
+    False se o limite diário já foi atingido.
+    """
+    from utils.gamification import PONTUACAO, LIMITE_DIARIO
+
+    try:
+        ws = _ws_leaderboard(planilha_id, secrets, error_log)
+        registros = ws.get_all_records()
+        linha = next((i + 2 for i, r in enumerate(registros) if r["id_usuario"] == id_usuario), None)
+
+        if linha is None:
+            ws.append_row([id_usuario, nome, cargo, 0, "", 0, ""])
+            registros = ws.get_all_records()
+            linha = next((i + 2 for i, r in enumerate(registros) if r["id_usuario"] == id_usuario), None)
+
+        pontos_total = int(ws.cell(linha, 4).value or 0)   # coluna D
+        pontos_dia   = int(ws.cell(linha, 6).value or 0)   # coluna F
+        data_dia     = ws.cell(linha, 7).value or ""
+
+        hoje_str = get_agora_br().strftime("%d/%m/%Y")
+        if data_dia != hoje_str:
+            pontos_dia = 0
+            data_dia = hoje_str
+
+        limite = LIMITE_DIARIO.get(acao, None)
+        if limite is not None and pontos_dia >= limite:
+            return False
+
+        ganho = PONTUACAO.get(acao, 0)
+        pontos_total += ganho
+        pontos_dia   += 1
+        ultima_atual = get_agora_br().strftime("%d/%m/%Y %H:%M:%S")
+
+        ws.update_cell(linha, 4, pontos_total)        # total
+        ws.update_cell(linha, 5, ultima_atual)       # última atualização
+        ws.update_cell(linha, 6, pontos_dia)          # pontos no dia
+        ws.update_cell(linha, 7, data_dia)            # data dia
+        return True
+    except Exception as e:
+        if error_log is not None:
+            error_log.append({
+                'data': get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),
+                'erro': str(e),
+                'funcao': 'atualizar_pontuacao_usuario',
+                'traceback': traceback.format_exc(),
+                'tipo': type(e).__name__
+            })
+        print(f"Erro ao atualizar pontuação: {e}")
+        return False
+
+
+def registrar_acao_com_pontuacao(
+        id_usuario: str,
+        tipo_acao: str,
+        localizacao,
+        feedback,
+        secrets,
+        error_log=None) -> bool:
+    """
+    Wrapper que (a) registra a ação na aba **Logs** (mantém histórico)
+    e (b) converte a ação para o código interno da gamificação, atualizando a pontuação do usuário.
+    Sempre retorna o resultado da gravação em Logs (True/False).
+    """
+    sucesso_log = registrar_acao(
+        id_usuario=id_usuario,
+        tipo_acao=tipo_acao,
+        localizacao=localizacao,
+        feedback=feedback,
+        secrets=secrets,
+        error_log=error_log
+    )
+
+    acao_normalizada = None
+    a = tipo_acao.lower()
+    if "check-in" in a:
+        acao_normalizada = "checkin"
+    elif "check-out" in a:
+        acao_normalizada = "checkout"
+    elif "concluiu" in a or "missão" in a:
+        acao_normalizada = "missao"
+    elif "ação:" in a and "instagram" in a:
+        acao_normalizada = "insta_engage"
+    elif "ação:" in a and "whatsapp" in a:
+        acao_normalizada = "friend_ref"
+    elif "talk_team" in a:
+        acao_normalizada = "talk_team"
+
+    if acao_normalizada:
+        u = st.session_state.get("usuario_logado", {})
+        nome = u.get("Nome", "Usuario")
+        cargo = u.get("Cargo", "").lower()
+        atualizar_pontuacao_usuario(
+            id_usuario=id_usuario,
+            nome=nome,
+            cargo=cargo,
+            acao=acao_normalizada,
+            planilha_id=secrets["planilha"]["id"],
+            secrets=secrets,
+            error_log=error_log
+        )
+
+    return sucesso_log
