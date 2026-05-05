@@ -316,11 +316,11 @@ if cargo_limpo == "colaborador":
 
             if not st.session_state["mensagem_exibida"]:
                 render_info_banner(
-                    titulo="COMANDO 2026<br><span style='color: var(--cor-secundaria);'>INFORME DO DIA</span>",
+                    titulo="Campanha Max Maciel 2026!<br><span style='color: var(--cor-secundaria);'>INFORME DO DIA</span>",
                     subtítulo="",
                     mensagem=m['Mensagem_Inicial']
                 )
-
+                st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("✅ LI AS INSTRUÇÕES E QUERO ENTRAR", width='stretch', type="primary"):
                     st.session_state["mensagem_exibida"] = True
                     st.rerun()
@@ -355,7 +355,6 @@ if cargo_limpo == "colaborador":
     tab_missoes, tab_contratos = st.tabs(["🚀 Missões e Presença", "📄 Meus Contratos"])
 
     with tab_missoes:
-        st.divider()
         render_section_header("REGISTRO DE PRESENÇA")
 
         c1, c2 = st.columns(2)
@@ -366,7 +365,7 @@ if cargo_limpo == "colaborador":
             if st.button("🏁 SAÍDA (CHECK-OUT)", width='stretch', key="btn_modal_out"):
                 modal_checkout(u, agora)
 
-        st.divider()
+        st.markdown("<br>", unsafe_allow_html=True)
         render_section_header("🚀 MISSÕES DIÁRIAS")
 
         t_txt = ""
@@ -497,10 +496,11 @@ elif cargo_limpo == "supervisor":
             m = msg_grupo.iloc[-1]
             if not st.session_state["mensagem_exibida"]:
                 render_info_banner(
-                    titulo="COMANDO 2026<br><span style='color: var(--cor-secundaria);'>DIRETRIZES DE LIDERANÇA</span>",
+                    titulo="Campanha Max Maciel 2026!<br><span style='color: var(--cor-secundaria);'>INFORMES DO DIA</span>",
                     subtítulo="",
                     mensagem=m['Mensagem_Inicial']
                 )
+                st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("✅ CIENTE DAS DIRETRIZES", width='stretch', type="primary"):
                     st.session_state["mensagem_exibida"] = True
                     st.rerun()
@@ -544,7 +544,7 @@ elif cargo_limpo == "supervisor":
             if st.button("🏁 SAÍDA (CHECK-OUT)", width='stretch', key="sup_out"):
                 modal_checkout(u, agora)
 
-        st.divider()
+        st.markdown("<br>", unsafe_allow_html=True)
         render_section_header("🚀 MISSÕES DIÁRIAS")
 
         t_txt = str(m.get('Tarefa_Direcionada', 'MISSÃO GERAL')).upper() if m is not None else "MISSÃO GERAL"
@@ -636,23 +636,15 @@ elif cargo_limpo == "supervisor":
             num_ativos = ativos_dia[ativos_dia['Tipo_Acao'].str.contains("Check-in")]['ID_Usuario'].nunique()
             total_acoes = len(ativos_dia)
 
-            with espaco_metricas:
-                render_metric_row([
-                    {'label': 'EQUIPE', 'value':
-                        str(total_vol)},
-                    {'label': 'ATIVOS', 'value':
-                        str(num_ativos), 'secondary': True},
-                    {'label': 'AÇÕES', 'value':
-                        str(total_acoes)}
-                ])
+        st.markdown(f'''                                 
+                <h3 style="font-size: 1.1rem; text-align: left;      
+            margin-top: -15px; font-family: 'Archivo Black',         
+            sans-serif; color: var(--cor-texto);">                   
+                    📋 STATUS DA EQUIPE ({d_str[:5]})                
+                </h3>                                                
+            ''', unsafe_allow_html=True)
 
-            st.markdown(f'''
-    <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px; font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);">
-        📋 STATUS DA EQUIPE ({d_str[:5]})
-    </h3>
-''', unsafe_allow_html=True)
-
-            for _, vol in minha_equipe.iterrows():
+        for _, vol in minha_equipe.iterrows():
                 logs_vol = df_logs[
                     (df_logs['ID_Usuario'] == vol['ID_Usuario']) & (df_logs['Data_Hora'].str.contains(d_str))]
 
@@ -707,15 +699,14 @@ elif cargo_limpo == "supervisor":
                     with c_w2:
                         st.link_button("💬 CHAT", f"https://wa.me/{w_vol}", width='stretch')
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            nome_primeiro = u['Nome'].split()[0].upper()
-            rel_txt = f"📊 *RELATÓRIO {d_str}*\n👤 Sup: {nome_primeiro}\n👥 Equipe: {total_vol}\n🔥 Ativos: {num_ativos}\n🎯 Ações: {total_acoes}"
-            st.link_button("📲 ENVIAR RELATÓRIO P/ COORDENAÇÃO",
+        st.markdown("<br>", unsafe_allow_html=True)
+        nome_primeiro = u['Nome'].split()[0].upper()
+        rel_txt = f"📊 *RELATÓRIO {d_str}*\n👤 Sup: {nome_primeiro}\n👥 Equipe: {total_vol}\n🔥 Ativos: {num_ativos}\n🎯 Ações: {total_acoes}"
+        st.link_button("📲 ENVIAR RELATÓRIO P/ COORDENAÇÃO",
                            f"https://api.whatsapp.com/send?text={urllib.parse.quote(rel_txt)}", width='stretch',
                            type="primary")
 
     st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
-    st.divider()
     st.markdown("<h3 style='font-size: 1.2rem; text-align: left;'>🛠️ SUPORTE DE LIDERANÇA</h3>", unsafe_allow_html=True)
     st.link_button("🛠️ REPORTAR ERRO NO APP", "https://wa.me/5561998788292?text=Erro no Painel de Supervisor",
                    width='stretch')

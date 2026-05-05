@@ -15,13 +15,17 @@
 # =============================================================================
 
 CORES = {
-    'primaria': '#FFEB00',      # Amarelo (sidebar, cards, destaque)
-    'secundaria': '#E20613',    # Vermelho (botões, ações, destaques)
-    'texto': '#1D1D1B',         # Preto (bordas, texto principal)
-    'fundo': '#F4F4F4',         # Cinza claro (fundos secundários)
-    'branco': '#FFFFFF',        # Branco (fundos de cards, inputs)
-    'gradiente_inicio': '#E9ECEF',
-    'gradiente_fim': '#ADB5BD',
+    'primaria': '#FFD700',      # Ouro (Brilhante, mas
+
+    'secundaria': '#B22222',    # Vermelho Tijolo (Sólido
+
+    'texto': '#1A1A1A',         # Grafite Escuro
+
+    'fundo': '#E2E8F0',         # Cinza Azulado (Moderno,
+
+    'branco': '#FFFFFF',        # Branco Puro
+    'gradiente_inicio': '#FFFFFF', # Branco
+    'gradiente_fim': '#D1D5DB',    # Cinza Metálico
 }
 
 # =============================================================================
@@ -53,6 +57,7 @@ def get_css():
     
     return f"""
     <style>
+
         /* 0. CONFIGURAÇÕES TÉCNICAS E FONTES */
         @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Roboto:wght@400;700&display=swap');
 
@@ -103,12 +108,11 @@ def get_css():
         [data-testid="stMainBlockContainer"] {{
             background-color: transparent !important;
         }}
-
         /* 2. SIDEBAR */
         section[data-testid="stSidebar"] {{
             background-color: var(--cor-primaria) !important;
             border-right: var(--borda-largura) var(--borda-estilo) var(--cor-texto) !important;
-        }}
+        }}  
 
         /* 3. TIPOGRAFIA (HEADINGS) */
         h1, h2, h3 {{                                                                                      
@@ -169,7 +173,7 @@ def get_css():
 
         button[data-baseweb="tab"][aria-selected="false"]:hover {{
             transform: translate(-2px, -2px) !important;
-            box-shadow: calc(var(--sombra-offset-x) + 2px) calc(var(--sombra-offset-y) + 2px) var(--sombra-blur) var(--cor-texto) !important;
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
         }}
 
         div[data-baseweb="tab-highlight"] {{
@@ -187,7 +191,7 @@ def get_css():
         div[data-testid="stExpander"], div[data-testid="stVerticalBlock"] > div[style*="border"] {{
             border: var(--borda-largura) var(--borda-estilo) var(--cor-texto) !important;
             background-color: var(--cor-fundo) !important;
-            box-shadow: calc(var(--sombra-offset-x) + 2px) calc(var(--sombra-offset-y) + 2px) var(--sombra-blur) var(--cor-primaria) !important;
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
         }}
 
         /* 7. INPUTS DE TEXTO */
@@ -195,7 +199,9 @@ def get_css():
             border: var(--borda-largura) var(--borda-estilo) var(--cor-texto) !important;
             text-align: center !important;
             background-color: var(--cor-branco) !important;
+            color: var(--cor-texto) !important;
             border-radius: var(--border-radius) !important;
+            -webkit-text-fill-color: var(--cor-texto) !important;
         }}
 
         /* 8. FOOTER E DECORAÇÕES */
@@ -276,7 +282,7 @@ def get_css():
             background-color: var(--cor-primaria);
             padding: 15px;
             border: 4px solid var(--cor-texto);
-            box-shadow: 10px 10px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
             text-align: center;
         }}
 
@@ -294,7 +300,7 @@ def get_css():
             background-color: var(--cor-primaria);
             padding: 15px;
             border: 4px solid var(--cor-texto);
-            box-shadow: 8px 8px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
             text-align: center;
             width: 90%;
             margin: 10px auto 25px auto;
@@ -352,7 +358,7 @@ def get_css():
             background-color: var(--cor-primaria);
             padding: 15px;
             border: 4px solid var(--cor-texto);
-            box-shadow: 8px 8px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
             text-align: center;
             margin-bottom: 25px;
         }}
@@ -385,7 +391,7 @@ def get_css():
             background-color: var(--cor-primaria);
             padding: 40px 20px;
             border: 5px solid var(--cor-texto);
-            box-shadow: 10px 10px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
             text-align: center;
             margin-top: 20px;
         }}
@@ -423,7 +429,7 @@ def get_css():
             padding: 8px 0;
             margin-bottom: 25px;
             white-space: nowrap;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
         }}
 
         .ticker-content {{
@@ -449,7 +455,7 @@ def get_css():
         .team-card {{
             background-color: var(--cor-branco);
             border: 4px solid var(--cor-texto);
-            box-shadow: 6px 6px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
             padding: 20px;
             margin-bottom: 12px;
         }}
@@ -513,7 +519,7 @@ def get_css():
             border: 4px solid var(--cor-texto);
             padding: 20px;
             text-align: center;
-            box-shadow: 6px 6px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
         }}
 
         .metric-card-label {{
@@ -539,7 +545,7 @@ def get_css():
             background-color: var(--cor-secundaria);
             padding: 20px;
             border: 4px solid var(--cor-texto);
-            box-shadow: 8px 8px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
             text-align: center;
             margin-bottom: 25px;
         }}
@@ -563,7 +569,7 @@ def get_css():
             border: 3px solid var(--cor-texto);
             padding: 15px;
             text-align: center;
-            box-shadow: 4px 4px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
         }}
 
         .diagnostic-card h3 {{
@@ -591,7 +597,7 @@ def get_css():
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 3px 3px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
         }}
 
         .log-entry-action {{
@@ -675,7 +681,7 @@ def get_css():
             flex: 1;
             background: var(--cor-branco);
             border: 2px solid var(--cor-texto);
-            box-shadow: 3px 3px 0px var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
             text-align: center;
             padding: 5px;
         }}
