@@ -149,6 +149,8 @@ with tab_hierarquia:
 
     df_usuarios_raw = carregar_dados("Usuarios", planilha_id, st.session_state.get('error_log'))
     df_grupos_info = carregar_dados("Grupos", planilha_id, st.session_state.get('error_log'))
+    # Carrega logs para cálculo de supervisores ativos hoje
+    df_logs = carregar_dados("Logs", planilha_id, st.session_state.get('error_log'))
 
     if df_usuarios_raw is not None and df_grupos_info is not None:
         df_gerencial = pd.merge(df_usuarios_raw, df_grupos_info, on='ID_Grupo', how='left')
@@ -170,6 +172,7 @@ with tab_hierarquia:
                 with col_alvo:
                     equipe = df_f_admin[df_f_admin['ID_Supervisor'].astype(str).str.strip() == str(sup['ID_Usuario']).strip()]
                     qtd_equipe = len(equipe)
+                    # Correção: garantir que df_logs esteja definido
                     logs_eq = df_logs[(df_logs['ID_Usuario'].isin(equipe['ID_Usuario'])) &
                                       (df_logs['Data_Hora'].str.contains(hoje_str))]
                     ativos_hoje = logs_eq[logs_eq['Tipo_Acao'].str.contains("Check-in")]['ID_Usuario'].nunique()
