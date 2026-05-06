@@ -11,6 +11,9 @@ from geopy.geocoders import Nominatim
 import streamlit as st
 import traceback
 
+# Gamificação – dicionários de pontos e limites diários
+from utils.gamification import PONTUACAO, LIMITE_DIARIO
+
 # Google Credentials
 from google.oauth2.service_account import Credentials as ServiceAccountCredentials
 from google.oauth2.credentials import Credentials as OAuthCredentials
@@ -252,6 +255,9 @@ def registrar_acao(id_usuario, tipo_acao, localizacao, feedback, secrets, error_
         if gps_valido:
             endereco = obter_endereco_simples(loc_safe, error_log)
 
+        # -------------------------------------------------------------
+        # 1️⃣  Grava a linha nos Logs
+        # -------------------------------------------------------------
         aba.append_row([
             agora_br.strftime("%Y%m%d%H%M%S"),
             str(id_usuario),
@@ -261,6 +267,48 @@ def registrar_acao(id_usuario, tipo_acao, localizacao, feedback, secrets, error_
             str(endereco),
             str(feedback)
         ])
+
+        # -------------------------------------------------------------
+        # 2️⃣  Converte o texto da ação para o código interno da gamificação
+        # -------------------------------------------------------------
+        acao_normalizada = None
+        a = tipo_acao.lower()
+        if "check-in" in a:
+            acao_normalizada = "checkin"
+        elif "check-out" in a:
+            acao_normalizada = "checkout"
+        elif "concluiu" in a or "missão" in a:
+            acao_normalizada = "missao"
+        elif "ação:" in a and "instagram" in a:
+            acao_normalizada = "insta_engage"
+        elif "ação:" in a and "whatsapp" in a:
+            acao_normalizada = "friend_ref"
+        elif "talk_team" in a:
+            acao_normalizada = "talk_team"
+
+        # -------------------------------------------------------------
+        # 3️⃣  Atualiza pontuação (apenas se houver código interno)
+        # -------------------------------------------------------------
+        if acao_normalizada:
+            # Obtém nome e cargo do usuário logado (fallback caso a sessão esteja vazia)
+            u = st.session_state.get("usuario_logado", {})
+            nome = u.get("Nome", "Usuario")
+            cargo = u.get("Cargo", "").lower()
+
+            # Atualiza pontuação respeitando limites diários
+            atualizar_pontuacao_usuario(
+                id_usuario=id_usuario,
+                nome=nome,
+                cargo=cargo,
+                acao=acao_normalizada,
+                planilha_id=secrets["planilha"]["id"],
+                secrets=secrets,
+                error_log=error_log
+            )
+
+        # -------------------------------------------------------------
+        # 4️⃣  Finaliza indicando sucesso no registro dos Logs
+        # -------------------------------------------------------------
         return True
 
     except Exception as e:
@@ -564,7 +612,7 @@ def carregar_grupos_completos_cached(planilha_id):
     """
     try:
         # Usa URL pública para evitar chamada de API
-        url = f"https://docs.google.com/spreadsheets/d/{planilha_id}/gviz/tq?tqx=out:csv&sheet=Grupos"
+        url = f"https://docs.google.com/spreadsheets/d/{planilha_id}/gviz/tq?tqx=out:CSV&sheet=Grupos"
         df = pd.read_csv(url)
 
         # ✅ FILTRA: Exclui linhas que são apenas Macro_Grupos (ID começa com '_MACRO_')
@@ -912,7 +960,9 @@ def registrar_acao_com_pontuacao(
     e (b) converte a ação para o código interno da gamificação, atualizando a pontuação do usuário.
     Sempre retorna o resultado da gravação em Logs (True/False).
     """
-    sucesso_log = registrar_acao(
+    # Função depreciada – redireciona para registrar_acao que já contém
+    # a lógica completa de registro + pontuação.
+    return registrar_acao(
         id_usuario=id_usuario,
         tipo_acao=tipo_acao,
         localizacao=localizacao,
@@ -920,34 +970,3 @@ def registrar_acao_com_pontuacao(
         secrets=secrets,
         error_log=error_log
     )
-
-    acao_normalizada = None
-    a = tipo_acao.lower()
-    if "check-in" in a:
-        acao_normalizada = "checkin"
-    elif "check-out" in a:
-        acao_normalizada = "checkout"
-    elif "concluiu" in a or "missão" in a:
-        acao_normalizada = "missao"
-    elif "ação:" in a and "instagram" in a:
-        acao_normalizada = "insta_engage"
-    elif "ação:" in a and "whatsapp" in a:
-        acao_normalizada = "friend_ref"
-    elif "talk_team" in a:
-        acao_normalizada = "talk_team"
-
-    if acao_normalizada:
-        u = st.session_state.get("usuario_logado", {})
-        nome = u.get("Nome", "Usuario")
-        cargo = u.get("Cargo", "").lower()
-        atualizar_pontuacao_usuario(
-            id_usuario=id_usuario,
-            nome=nome,
-            cargo=cargo,
-            acao=acao_normalizada,
-            planilha_id=secrets["planilha"]["id"],
-            secrets=secrets,
-            error_log=error_log
-        )
-
-    return sucesso_log
