@@ -288,28 +288,72 @@ with tab_mapa:
         "<h2 style='font-family: \"Archivo Black\", sans-serif; color: var(--cor-texto); margin-bottom: 25px; font-size: 2rem;'>🗺️ MAPA DE OPERAÇÕES</h2>",
         unsafe_allow_html=True)
 
-    df_logs['Data_Filtro'] = df_logs['Data_Hora'].str.split().str[0]
+    # --------------------------------------------------------------
+    # 1️⃣  Carregar os logs e garantir que a coluna "Nome" exista
+    # --------------------------------------------------------------
+    #   – df_logs já está disponível (carregado na aba 2), porém não contém
+    #     o nome do usuário, apenas o ID_Usuario.
+    #   – Carregamos a planilha “Usuarios” e fazemos o merge para obter a
+    #     coluna “Nome” antes de gerar o mapa.
+    df_usuarios = carregar_dados(
+        "Usuarios",
+        st.secrets["planilha"]["id"],
+        st.session_state.get('error_log')
+    )
+    #   Merge (left) mantendo todos os registros de logs; se algum usuário
+    #   estiver ausente, “Nome” ficará NaN e será tratado depois.
+    df_m = df_logs.merge(
+        df_usuarios[["ID_Usuario", "Nome"]],
+        on="ID_Usuario",
+        how="left"
+    )
+
+    # --------------------------------------------------------------
+    # 2️⃣  Aplicar o filtro de data (mantido exatamente como antes)
+    # --------------------------------------------------------------
+    df_m['Data_Filtro'] = df_m['Data_Hora'].str.split().str[0]
     datas_mapa = sorted(
-        [d for d in df_logs['Data_Filtro'].unique().tolist() if isinstance(d, str) and "/" in d],
+        [d for d in df_m['Data_Filtro'].unique().tolist()
+         if isinstance(d, str) and "/" in d],
         key=lambda x: datetime.strptime(x, "%d/%m/%Y"),
         reverse=True
     )
-    periodo_mapa = st.selectbox("📍 FILTRAR POR DATA", ["Histórico Completo"] + datas_mapa, key="filtro_mapa")
+    periodo_mapa = st.selectbox(
+        "📍 FILTRAR POR DATA",
+        ["Histórico Completo"] + datas_mapa,
+        key="filtro_mapa"
+    )
     if periodo_mapa == "Histórico Completo":
-        df_m = df_logs.copy()
+        df_m_filtrado = df_m.copy()
     else:
-        df_m = df_logs[df_logs['Data_Filtro'] == periodo_mapa].copy()
+        df_m_filtrado = df_m[df_m['Data_Filtro'] == periodo_mapa].copy()
 
-    df_m['lat'], df_m['lon'] = zip(*df_m['Localização'].apply(
-        lambda pos: (float(pos.split(",")[0]), float(pos.split(",")[1])) if isinstance(pos, str) and "," in pos else (None, None)
+    # --------------------------------------------------------------
+    # 3️⃣  Extrair latitude/longitude – sem alterações
+    # --------------------------------------------------------------
+    df_m_filtrado['lat'], df_m_filtrado['lon'] = zip(*df_m_filtrado['Localização'].apply(
+        lambda pos: (float(pos.split(",")[0]), float(pos.split(",")[1]))
+        if isinstance(pos, str) and "," in pos else (None, None)
     ))
-    df_geo = df_m.dropna(subset=['lat', 'lon'])
+    df_geo = df_m_filtrado.dropna(subset=['lat', 'lon'])
 
+    # --------------------------------------------------------------
+    # 4️⃣  Gerar o mapa – agora a coluna “Nome” está disponível
+    # --------------------------------------------------------------
     if not df_geo.empty:
-        mapa = folium.Map(location=[df_geo['lat'].mean(), df_geo['lon'].mean()], zoom_start=12)
+        mapa = folium.Map(
+            location=[df_geo['lat'].mean(), df_geo['lon'].mean()],
+            zoom_start=12
+        )
         for _, row in df_geo.iterrows():
-            popup = folium.Popup(f"{row['Nome']} - {row['Tipo_Acao']}", max_width=250)
+            # Caso o nome esteja ausente, usar apenas o ID
+            nome_exib = row['Nome'] if pd.notna(row['Nome']) else row['ID_Usuario']
+            popup = folium.Popup(
+                f"{nome_exib} - {row['Tipo_Acao']}",
+                max_width=250
+            )
             folium.Marker([row['lat'], row['lon']], popup=popup).add_to(mapa)
+
         st_folium(mapa, width=1200, height=600)
     else:
         st.warning("Nenhum dado de GPS encontrado para o filtro selecionado.")
