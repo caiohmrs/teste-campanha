@@ -77,7 +77,19 @@ if "error_log" not in st.session_state:
 if "mensagem_exibida" not in st.session_state:
     st.session_state["mensagem_exibida"] = False
 # -----------------------------------------------------
+# ----------------------------------------------------------------------
+# 1️⃣  Garantir que a sessão tenha a chave "usuario_logado"
+# ----------------------------------------------------------------------
+if "usuario_logado" not in st.session_state:
+    st.session_state["usuario_logado"] = None
 
+# ----------------------------------------------------------------------
+# 2️⃣  Se não houver usuário logado, enviar para a tela de login
+# ----------------------------------------------------------------------
+if st.session_state["usuario_logado"] is None:
+    # limpa possíveis caches que já foram criados antes do redirect
+    st.cache_data.clear()
+    st.switch_page("pages/00_Login.py")
 # =============================================================================
 # CAPTURA DE VARIÁVEIS DO USUÁRIO
 # =============================================================================
