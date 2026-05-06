@@ -96,9 +96,22 @@ with st.sidebar:
             st.rerun()
 
     if st.button("Sair / Trocar Conta", width='stretch'):
-        st.session_state["logout_em_andamento"] = True
-        st.session_state["usuario_logado"] = None
+        # ---- RESETEAR ESTADO DE SESSÃO -------------------------------------------
+        # Remove todas as chaves existentes
+        for _k in list(st.session_state.keys()):
+            del st.session_state[_k]
+
+            # Garante que as chaves essenciais existam após o logout
+        st.session_state["usuario_logado"] = None  # evita KeyError
+        st.session_state["error_log"] = []  # mantém estrutura de log
         st.session_state["mensagem_exibida"] = False
+
+        # Limpa cache de dados
+        st.cache_data.clear()
+        time.sleep(2)
+
+        # Redireciona para a tela de login
+        st.switch_page("pages/00_Login.py")
 
         try:
             cookie_manager.delete("comando2026_user_id", key="del_user")
