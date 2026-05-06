@@ -255,9 +255,6 @@ def registrar_acao(id_usuario, tipo_acao, localizacao, feedback, secrets, error_
         if gps_valido:
             endereco = obter_endereco_simples(loc_safe, error_log)
 
-        # -------------------------------------------------------------
-        # 1️⃣  Grava a linha nos Logs
-        # -------------------------------------------------------------
         aba.append_row([
             agora_br.strftime("%Y%m%d%H%M%S"),
             str(id_usuario),
@@ -268,9 +265,6 @@ def registrar_acao(id_usuario, tipo_acao, localizacao, feedback, secrets, error_
             str(feedback)
         ])
 
-        # -------------------------------------------------------------
-        # 2️⃣  Converte o texto da ação para o código interno da gamificação
-        # -------------------------------------------------------------
         acao_normalizada = None
         a = tipo_acao.lower()
         if "check-in" in a:
@@ -286,16 +280,11 @@ def registrar_acao(id_usuario, tipo_acao, localizacao, feedback, secrets, error_
         elif "talk_team" in a:
             acao_normalizada = "talk_team"
 
-        # -------------------------------------------------------------
-        # 3️⃣  Atualiza pontuação (apenas se houver código interno)
-        # -------------------------------------------------------------
         if acao_normalizada:
-            # Obtém nome e cargo do usuário logado (fallback caso a sessão esteja vazia)
             u = st.session_state.get("usuario_logado", {})
             nome = u.get("Nome", "Usuario")
             cargo = u.get("Cargo", "").lower()
 
-            # Atualiza pontuação respeitando limites diários
             atualizar_pontuacao_usuario(
                 id_usuario=id_usuario,
                 nome=nome,
@@ -306,9 +295,6 @@ def registrar_acao(id_usuario, tipo_acao, localizacao, feedback, secrets, error_
                 error_log=error_log
             )
 
-        # -------------------------------------------------------------
-        # 4️⃣  Finaliza indicando sucesso no registro dos Logs
-        # -------------------------------------------------------------
         return True
 
     except Exception as e:
@@ -877,9 +863,13 @@ def simular_acao_usuario(id_usuario, tipo_acao, secrets, error_log=None):
 # -------------------------------------------------------------------------
 def _ws_leaderboard(planilha_id, secrets, error_log=None):
     """
-    Retorna a Worksheet da aba **Leaderboard** (mesma planilha já utilizada
-    nas demais funções).  Caso a aba ainda não exista, a função disparará a
-    exceção que será capturada pelo chamador.
+    Retorna a Worksheet da aba **Leaderboard** (mesma planilha usada nas demais funções).
+
+    **Novas colunas** (ordem abaixo):
+        id_usuario, nome, cargo, pontos_total, ultima_atualizacao,
+        pontos_dia, data_dia, tipo_acao, pontos_ganhos
+
+    Caso a aba ainda não exista, a exceção será propagada ao chamador.
     """
     client = _get_gspread_client(secrets, error_log)
     planilha = client.open_by_key(planilha_id)
@@ -895,46 +885,93 @@ def atualizar_pontuacao_usuario(
         secrets,
         error_log=None) -> bool:
     """
-    Incrementa a pontuação do usuário respeitando o limite diário
-    configurado em utils/gamification.py.
-    Retorna True se a pontuação foi efetivamente adicionada,
-    False se o limite diário já foi atingido.
+    Registra **uma linha nova** na aba Leaderboard a cada ação do usuário.
+
+    Estrutura da aba (colunas na ordem exata):
+        1. id_usuario
+        2. nome
+        3. cargo
+        4. pontos_total          – somatório acumulado (apenas se ganhar pontos)
+        5. ultima_atualizacao   – timestamp da última gravação que gerou pontos
+        6. pontos_dia           – contagem de ações que geraram pontos hoje
+        7. data_dia             – data (dd/mm/yyyy) referente a ``pontos_dia``
+        8. tipo_acao            – código interno da ação (ex: "checkin")
+        9. pontos_ganhos        – pontos efetivamente concedidos nesta ação
     """
     from utils.gamification import PONTUACAO, LIMITE_DIARIO
 
     try:
         ws = _ws_leaderboard(planilha_id, secrets, error_log)
+
+        # ---------------------------------------------------------
+        # 1️⃣  Obter todas as linhas já existentes (para cálculos)
+        # ---------------------------------------------------------
         registros = ws.get_all_records()
-        linha = next((i + 2 for i, r in enumerate(registros) if r["id_usuario"] == id_usuario), None)
+        linhas_usuario = [r for r in registros if str(r.get('id_usuario')) == str(id_usuario)]
 
-        if linha is None:
-            ws.append_row([id_usuario, nome, cargo, 0, "", 0, ""])
-            registros = ws.get_all_records()
-            linha = next((i + 2 for i, r in enumerate(registros) if r["id_usuario"] == id_usuario), None)
+        # ---------------------------------------------------------
+        # 2️⃣  Determinar o total acumulado já existente
+        # ---------------------------------------------------------
+        if linhas_usuario:
+            total_atual = max([int(r.get('pontos_total', 0) or 0) for r in linhas_usuario])
+        else:
+            total_atual = 0
 
-        pontos_total = int(ws.cell(linha, 4).value or 0)   # coluna D
-        pontos_dia   = int(ws.cell(linha, 6).value or 0)   # coluna F
-        data_dia     = ws.cell(linha, 7).value or ""
-
+        # ---------------------------------------------------------
+        # 3️⃣  Determinar contagem de ações hoje (para limite diário)
+        # ---------------------------------------------------------
         hoje_str = get_agora_br().strftime("%d/%m/%Y")
-        if data_dia != hoje_str:
-            pontos_dia = 0
-            data_dia = hoje_str
+        acoes_hoje = [
+            r for r in linhas_usuario
+            if r.get('data_dia') == hoje_str and r.get('tipo_acao') == acao
+        ]
+        limite = LIMITE_DIARIO.get(acao, None)          # None → sem limite
+        limite_atingido = (limite is not None and len(acoes_hoje) >= limite)
 
-        limite = LIMITE_DIARIO.get(acao, None)
-        if limite is not None and pontos_dia >= limite:
-            return False
+        # ---------------------------------------------------------
+        # 4️⃣  Calcular pontos que deverão ser creditados nesta ação
+        # ---------------------------------------------------------
+        ganho = 0 if limite_atingido else PONTUACAO.get(acao, 0)
 
-        ganho = PONTUACAO.get(acao, 0)
-        pontos_total += ganho
-        pontos_dia   += 1
-        ultima_atual = get_agora_br().strftime("%d/%m/%Y %H:%M:%S")
+        # Atualiza total e pontos do dia somente se houver ganho
+        novo_total = total_atual + ganho
 
-        ws.update_cell(linha, 4, pontos_total)        # total
-        ws.update_cell(linha, 5, ultima_atual)       # última atualização
-        ws.update_cell(linha, 6, pontos_dia)          # pontos no dia
-        ws.update_cell(linha, 7, data_dia)            # data dia
+        # Se for a primeira ação do usuário ou se o dia mudou, reseta pontos_dia
+        if linhas_usuario:
+            # última linha gravada do usuário (pela data de atualização)
+            ultima_linha = max(
+                linhas_usuario,
+                key=lambda r: r.get('ultima_atualizacao', '')
+            )
+            pontos_dia_atual = int(ultima_linha.get('pontos_dia') or 0)
+            data_dia_atual = ultima_linha.get('data_dia')
+            if data_dia_atual != hoje_str:
+                pontos_dia_atual = 0
+        else:
+            pontos_dia_atual = 0
+
+        novo_pontos_dia = pontos_dia_atual + (1 if ganho > 0 else 0)
+
+        # ---------------------------------------------------------
+        # 5️⃣  Gravar a nova linha
+        # ---------------------------------------------------------
+        ws.append_row([
+            str(id_usuario),                # id_usuario
+            str(nome),                     # nome
+            str(cargo),                    # cargo
+            novo_total,                    # pontos_total
+            get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),  # ultima_atualizacao
+            novo_pontos_dia,               # pontos_dia
+            hoje_str,                      # data_dia
+            acao,                           # tipo_acao
+            ganho                           # pontos_ganhos
+        ])
+
+        # ---------------------------------------------------------
+        # 6️⃣  Retorno
+        # ---------------------------------------------------------
         return True
+
     except Exception as e:
         if error_log is not None:
             error_log.append({
