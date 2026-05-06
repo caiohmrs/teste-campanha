@@ -268,9 +268,11 @@ with tab_logs:
     if not df_logs.empty:
         try:
             buffer = io.BytesIO()
+            # O ExcelWriter funciona como context‑manager; não há necessidade de chamar save().
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df_logs.to_excel(writer, index=False, sheet_name='Logs')
-                writer.save()
+                # writer.save()  # Removido – método inexistente nas versões recentes do pandas
+
             st.download_button(
                 label="📥 BAIXAR LOGS COMPLETOS (XLSX)",
                 data=buffer.getvalue(),
