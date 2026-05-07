@@ -11,7 +11,7 @@ PONTUACAO = {
     "checkout":     5,
     "missao":       8,
     "insta_engage": 4,
-    "friend_ref":  10,
+    "whatsapp":  10,
     "talk_team":    6,   # ← ponto para o supervisor que fala com a equipe
 }
 
@@ -24,6 +24,6 @@ LIMITE_DIARIO = {
     "checkout":    1,
     "missao":       1,
     "insta_engage": 3,
-    "friend_ref":   1,
+    "colaborador":   1,
     "talk_team":    1,   # apenas 1 ponto por dia para o supervisor
 }
