@@ -10,6 +10,7 @@
 import streamlit as st
 import urllib.parse
 from typing import List, Dict, Any
+from utils.gamification import ACTION_LABELS   # ← novo import
 
 def render_login_header():
     """Renderiza o cabeçalho da tela de login."""
@@ -280,8 +281,8 @@ def render_action_progress(actions: List[Dict[str, Any]]) -> None:
         - ``pontos`` → pontos ganhos por ocorrência (opcional)
 
     Para manter compatibilidade com a definição anterior, o componente aceita
-    também as chaves ``label`` e ``progresso``.  Assim, qualquer um dos dois
-    formatos funciona.
+        também as chaves ``label`` e ``progresso``.  Assim, qualquer um dos dois
+        formatos funciona.
 
     Exemplo de lista aceita:
     ```python
@@ -294,7 +295,11 @@ def render_action_progress(actions: List[Dict[str, Any]]) -> None:
     for a in actions:
         # ----- Nome da ação -------------------------------------------------
         # Tenta as duas possíveis chaves e garante string vazia como fallback
-        label = a.get("label") or a.get("nome") or ""
+        raw_label = a.get("label") or a.get("nome") or ""
+        # normaliza para chave do dicionário (lowercase, sem espaços)
+        chave_normalizada = raw_label.lower().replace(' ', '_')
+        label = ACTION_LABELS.get(chave_normalizada,
+                                 raw_label.replace('_', ' ').title())
 
         # ----- Quantidade já feita hoje --------------------------------------
         progresso = a.get("progresso") if a.get("progresso") is not None else a.get("feitas", 0)

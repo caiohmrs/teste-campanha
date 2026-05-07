@@ -63,7 +63,7 @@ from utils.components import (
     render_points_badge,
     render_action_progress          # ← novo import
 )
-from utils.gamification import PONTUACAO, LIMITE_DIARIO   # ← novo
+from utils.gamification import PONTUACAO, LIMITE_DIARIO, ACTION_LABELS  # ← novo import
 
 # CONFIGURAÇÃO INICIAL
 st.set_page_config(
@@ -295,8 +295,11 @@ if cargo_limpo == "colaborador":
 
             descricao = f"{feitas} / ∞" if limite is None else f"{feitas} / {limite}"
 
+            # ----- usa nome elegante -----
+            nome_elegante = ACTION_LABELS.get(acao, acao.replace('_', ' ').title())
+
             resumo_acoes.append({
-                "label": acao.replace('_', ' ').title(),
+                "label": nome_elegante,
                 "value": descricao,
                 "secondary": False
             })
@@ -356,8 +359,12 @@ if cargo_limpo == "colaborador":
         for acao, pts_por_acao in PONTUACAO.items():
             limite = LIMITE_DIARIO.get(acao)                 # None = sem limite
             feitas = int(linhas_hoje[linhas_hoje['tipo_acao'] == acao].shape[0])
+
+            # ----- usa nome elegante -----
+            nome_elegante = ACTION_LABELS.get(acao, acao.replace('_', ' ').title())
+
             acoes_progresso.append({
-                "nome"   : acao.replace('_', ' ').title(),
+                "nome"   : nome_elegante,
                 "feitas" : feitas,
                 "limite" : limite,
                 "pontos" : pts_por_acao
