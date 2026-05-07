@@ -781,7 +781,62 @@ def get_css():
             color: var(--cor-secundaria);
         }}
 
-        /* 30. PROGRESS BAR (reutilizo estilos já existentes) */
+        /* 30. CARD INFORMATIVO “COMO FUNCIONA O RANKING” */
+        .info-ranking-card {{
+            background-color: var(--cor-branco);            /* fundo neutro */
+            border: 3px solid var(--cor-primaria);          /* destaque consistente */
+            border-radius: var(--border-radius);
+            padding: 16px 20px;
+            margin-bottom: 24px;                           /* espaço antes do próximo bloco */
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
+        }}
+
+        .info-ranking-card h2 {{
+            margin: 0 0 8px 0;
+            font-family: var(--fonte-titulo);
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--cor-primaria);
+            text-transform: uppercase;
+        }}
+
+        .info-ranking-card p {{
+            margin: 0;
+            font-family: var(--fonte-texto);
+            font-size: 0.94rem;
+            line-height: 1.4;
+            color: var(--cor-texto);
+        }}
+
+        /* 31. ACTION PROGRESS CARD (GAMIFICAÇÃO) */
+        .action-progress-card {{
+            background-color: var(--cor-primaria);
+            border: 4px solid var(--cor-texto);
+            border-radius: var(--border-radius);
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
+        }}
+
+        .action-progress-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }}
+
+        .action-progress-label {{
+            font-family: var(--fonte-titulo);
+            color: var(--cor-texto);
+        }}
+
+        .action-progress-value {{
+            font-family: var(--fonte-titulo);
+            font-weight: bold;
+            color: var(--cor-secundaria);
+        }}
+
+        /* 32. PROGRESS BAR (reutilizo estilos já existentes) */
         .progress-bar {{
             width: 100%;
             background-color: var(--cor-fundo);

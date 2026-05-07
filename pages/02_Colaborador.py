@@ -1,5 +1,5 @@
 # =============================================================================
-# PAGES/02_🔹_COLABORADOR.PY – VISÃO COLABORADOR (bloco anteriormente em 01_Principal.py)
+# PAGES/02_🔹_COLABORADOR.PY – VISÃO COLABORADOR (bloco anteriormente em 01_Principal.py)
 # =============================================================================
 
 import pandas as pd
@@ -62,7 +62,7 @@ from utils.components import (
     render_position_badge,
     render_points_badge,
     render_action_progress,
-    render_info_ranking# ← novo import
+    render_info_ranking  # ← novo import
 )
 from utils.gamification import PONTUACAO, LIMITE_DIARIO, ACTION_LABELS  # ← novo import
 
@@ -86,13 +86,13 @@ if "mensagem_exibida" not in st.session_state:
     st.session_state["mensagem_exibida"] = False
 # -----------------------------------------------------
 # ----------------------------------------------------------------------
-# 1️⃣  Garantir que a sessão tenha a chave "usuario_logado"
+# 1️⃣  Garantir que a sessão tenha a chave "usuario_logado"
 # ----------------------------------------------------------------------
 if "usuario_logado" not in st.session_state:
     st.session_state["usuario_logado"] = None
 
 # ----------------------------------------------------------------------
-# 2️⃣  Se não houver usuário logado, enviar para a tela de login
+# 2️⃣  Se não houver usuário logado, enviar para a tela de login
 # ----------------------------------------------------------------------
 if st.session_state["usuario_logado"] is None:
     # limpa possíveis caches que já foram criados antes do redirect
@@ -538,7 +538,7 @@ if cargo_limpo == "colaborador":
     # ----------------------------------------------------------------------
     with tab_ranking:
         # -----------------------------------------------------------------
-        # 1️⃣ Caixa explicativa – alinhada horizontalmente (full‑width)
+        # 1️⃣  Caixa explicativa (novo card “info‑ranking”)
         # -----------------------------------------------------------------
         render_info_ranking(
             titulo="⚙️ Como funciona o Ranking",
@@ -549,21 +549,23 @@ if cargo_limpo == "colaborador":
             )
         )
 
+        # Pequeno espaçamento após o card (para não colar no leaderboard)
+        st.markdown("<br>", unsafe_allow_html=True)
+
         # -----------------------------------------------------------------
-        # 4️⃣ Leaderboard – ocupa a largura completa
+        # 2️⃣  Leaderboard – ocupa a largura completa
         # -----------------------------------------------------------------
         if ranking:
             render_leaderboard(ranking)
-            st.markdown("<br>", unsafe_allow_html=True)   # espaço visual
-            # ---------------------------------------------------------
-            # 5️⃣  Mostrar progresso por ação (novo componente)
-            # ---------------------------------------------------------
-            if acoes_progresso:
-                render_action_progress(acoes_progresso)
-            else:
-                st.info("Nenhuma ação realizada ainda.")
+            st.markdown("<br>", unsafe_allow_html=True)   # espaço visual entre blocos
+
+        # -----------------------------------------------------------------
+        # 3️⃣  Progresso por ação (novo componente)
+        # -----------------------------------------------------------------
+        if acoes_progresso:
+            render_action_progress(acoes_progresso)
         else:
-            st.info("Ainda não há dados de pontuação para exibir.")
+            st.info("Nenhuma ação realizada ainda.")
 
     st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
     st.divider()
