@@ -273,34 +273,51 @@ def render_action_progress(actions: List[Dict[str, Any]]) -> None:
     """
     Renderiza cartões de progresso de ações gamificadas.
 
-    Cada dicionário da lista deve conter:
-        - ``label`` (str): nome da ação
-        - ``progresso`` (int ou float): quantidade já efetuada hoje
-        - ``limite`` (int ou None): limite diário (``None`` = ilimitado)
-        - ``pontos`` (int ou None, opcional): pontos ganhos nessa ação (exibe badge)
+    **Flexibilidade de chaves** – a página *02_Colaborador.py* envia:
+        - ``nome``   → nome da ação
+        - ``feitas`` → quantidade já efetuada hoje
+        - ``limite`` → limite diário (``None`` = ilimitado)
+        - ``pontos`` → pontos ganhos por ocorrência (opcional)
 
-    Exemplo:
-        actions = [
-            {"label": "Check‑in", "progresso": 1, "limite": 1, "pontos": 10},
-            {"label": "Post Instagram", "progresso": 3, "limite": 5, "pontos": 2},
-        ]
+    Para manter compatibilidade com a definição anterior, o componente aceita
+    também as chaves ``label`` e ``progresso``.  Assim, qualquer um dos dois
+    formatos funciona.
+
+    Exemplo de lista aceita:
+    ```python
+    actions = [
+        {"nome": "Check‑in", "feitas": 1, "limite": 1, "pontos": 10},
+        {"label": "Post Instagram", "progresso": 3, "limite": 5, "pontos": 2},
+    ]
+    ```
     """
     for a in actions:
-        label = a.get("label", "")
-        progresso = a.get("progresso", 0)
-        limite = a.get("limite")
+        # ----- Nome da ação -------------------------------------------------
+        # Tenta as duas possíveis chaves e garante string vazia como fallback
+        label = a.get("label") or a.get("nome") or ""
+
+        # ----- Quantidade já feita hoje --------------------------------------
+        progresso = a.get("progresso") if a.get("progresso") is not None else a.get("feitas", 0)
+
+        # ----- Limite diário -------------------------------------------------
+        limite = a.get("limite")  # pode ser None (ilimitado)
+
+        # ----- Pontos ganhos (opcional) --------------------------------------
         pontos = a.get("pontos")
 
-        # Texto de progresso
+        # ----- Texto de progresso (ex.: “3 / 5” ou “2 / ∞”) --------------------
         if limite is None:
             progresso_txt = f"{int(progresso)} / ∞"
             pct = 0  # barra oculta quando ilimitado
         else:
             progresso_txt = f"{int(progresso)} / {int(limite)}"
+            # Evita divisão por zero – mesmo que limite fosse 0 (não esperado)
             pct = (float(progresso) / float(limite)) * 100 if limite else 0
 
+        # ----- Badge de pontos (ex.: “+10 pts”) ----------------------------
         badge_pts = render_points_badge(pontos) if pontos is not None else ""
 
+        # ----- Montar o HTML --------------------------------------------------
         st.markdown(f'''
             <div class="action-progress-card">
                 <div class="action-progress-row">
