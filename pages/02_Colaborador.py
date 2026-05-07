@@ -553,8 +553,8 @@ if cargo_limpo == "colaborador":
             render_info_ranking(
                 titulo="Como funciona o Ranking",
                 mensagem=(
-                    "São contabilizadas apenas as ações que geram pontuação. "
-                    "Cada ação tem um limite diário (veja ao lado). "
+                    "As ações de CheckIn, CheckOut, Completar a Missão do dia, Interagir no Insta e Convidar um novo amigo pelo whatsapp gera pontuação. "
+                    "Cada ação tem um limite diário e uma pontuação concedida (veja abaixo no progresso de ações). "
                     "Somente as ações aprovadas aumentam o total de pontos."
                 )
             )
@@ -572,7 +572,6 @@ if cargo_limpo == "colaborador":
         # 3️⃣  Leaderboard Geral
         # -------------------------------------------------------------
         # **Leaderboard – agora exibido fora de qualquer expander**
-        st.subheader("🏆 Leaderboard – Ranking Global")
         if ranking:
             render_leaderboard(ranking)
         else:
