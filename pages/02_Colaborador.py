@@ -319,65 +319,48 @@ if cargo_limpo == "colaborador":
             total_pontos = int(df_user.iloc[-1]['pontos_total'])
 
         # ---------------------------------
-        # 3️⃣ Ranking geral (top 10)
-        # ---------------------------------
-        # a)  Última entrada de cada usuário (mais recente)
-        df_ultimas = df_leaderboard.sort_values('ultima_atualizacao').drop_duplicates('id_usuario', keep='last')
-        df_ordenado = df_ultimas.sort_values('pontos_total', ascending=False).reset_index(drop=True)
+        # 3️⃣ Ranking geral (top 10) – **exibir apenas colaboradores**
+        # -----------------------------------------------------------------
+        # a)  Última atualização de cada usuário (mais recente)
+        df_ultimas = df_leaderboard.sort_values('ultima_atualizacao') \
+                                   .drop_duplicates('id_usuario', keep='last')
+
+        # b)  Juntar com a planilha de usuários para obter o cargo
+        df_usuarios_tmp = df_usuarios[['ID_Usuario', 'Cargo']].rename(
+            columns={'ID_Usuario': 'id_usuario'}
+        )
+        df_ultimas = df_ultimas.merge(df_usuarios_tmp, on='id_usuario', how='left')
+
+        # c)  Filtrar apenas registros cujo cargo contém “colaborador”
+        df_ultimas = df_ultimas[
+            df_ultimas['Cargo'].astype(str).str.lower().str.contains('colaborador')
+        ]
+
+        # d)  Ordenar por pontuação total (desc) e recomputar a posição
+        df_ordenado = df_ultimas.sort_values('pontos_total', ascending=False) \
+                               .reset_index(drop=True)
         df_ordenado['posicao'] = df_ordenado.index + 1
 
-        # --------------------------------------------------------------
-        # 2️⃣  Garantir que a coluna de ganhos seja numérica
-        # --------------------------------------------------------------
-        #   - Converte valores que vieram como texto para int
-        #   - Valores não convertíveis (NaN, vazios) ficam como 0
+        # e)  Garantir que a coluna de ganhos seja numérica
         df_ordenado['pontos_ganhos'] = (
             pd.to_numeric(df_ordenado['pontos_ganhos'], errors='coerce')
             .fillna(0)
             .astype(int)
         )
 
-        # Construir lista de dicionários para o componente
+        # f)  Converter para a lista esperada por `render_leaderboard`
         ranking = df_ordenado[['posicao', 'nome', 'pontos_total', 'pontos_ganhos']].rename(
-            columns={'nome': 'nome', 'pontos_total': 'pontos', 'pontos_ganhos': 'ganho'}
+            columns={
+                'nome'        : 'nome',
+                'pontos_total': 'pontos',
+                'pontos_ganhos': 'ganho'
+            }
         ).to_dict('records')
 
-        # Posição atual do usuário
+        # g)  Posição atual do colaborador (após filtro)
         linha_user = df_ordenado[df_ordenado['id_usuario'] == u['ID_Usuario']]
         if not linha_user.empty:
             posicao_atual = int(linha_user.iloc[0]['posicao'])
-
-        # --------------------------------------------------------------
-        # 5️⃣  Montar lista de ações **apenas** para o usuário logado
-        # --------------------------------------------------------------
-        # Cada dicionário deve conter:
-        #   - nome   : nome legível da ação
-        #   - feitas : quantas vezes foi feita hoje **pelo usuário**
-        #   - limite : limite diário (None → ilimitado)
-        #   - pontos : quantos pontos vale cada ocorrência
-        acoes_progresso = []
-
-        # 1️⃣  Filtrar o Leaderboard para o usuário atual
-        df_user_today = df_leaderboard[
-            (df_leaderboard['id_usuario'] == u['ID_Usuario']) &
-            (df_leaderboard['data_dia'] == hoje_str)
-        ]
-
-        for acao, pts_por_acao in PONTUACAO.items():
-            limite = LIMITE_DIARIO.get(acao)                 # None = sem limite
-
-            # Contar quantas vezes a ação foi realizada **pelo usuário** hoje
-            feitas = int(df_user_today[df_user_today['tipo_acao'] == acao].shape[0])
-
-            # ----- usa nome elegante -----
-            nome_elegante = ACTION_LABELS.get(acao, acao.replace('_', ' ').title())
-
-            acoes_progresso.append({
-                "nome"   : nome_elegante,
-                "feitas" : feitas,
-                "limite" : limite,
-                "pontos" : pts_por_acao
-            })
 
     # ----------------------------------------------------------------------
     # Mensagem do dia (variável de mensagem)
