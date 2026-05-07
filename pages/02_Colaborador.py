@@ -61,7 +61,8 @@ from utils.components import (
     render_leaderboard,
     render_position_badge,
     render_points_badge,
-    render_action_progress          # ← novo import
+    render_action_progress,
+    render_info_ranking# ← novo import
 )
 from utils.gamification import PONTUACAO, LIMITE_DIARIO, ACTION_LABELS  # ← novo import
 
@@ -539,9 +540,8 @@ if cargo_limpo == "colaborador":
         # -----------------------------------------------------------------
         # 1️⃣ Caixa explicativa – alinhada horizontalmente (full‑width)
         # -----------------------------------------------------------------
-        render_info_banner(
+        render_info_ranking(
             titulo="⚙️ Como funciona o Ranking",
-            subtítulo="",
             mensagem=(
                 "São contabilizadas apenas as ações que geram pontuação. "
                 "Cada ação tem um limite diário (veja ao lado). "
