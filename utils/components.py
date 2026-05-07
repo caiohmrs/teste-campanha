@@ -9,7 +9,7 @@
 
 import streamlit as st
 import urllib.parse
-
+from typing import List, Dict, Any
 
 def render_login_header():
     """Renderiza o cabeçalho da tela de login."""
@@ -219,3 +219,91 @@ def render_metric_row(metrics):
             {items_html}
         </div>
     """, unsafe_allow_html=True)
+
+
+def render_position_badge(posicao: int) -> str:
+    """
+    Retorna o HTML de um *badge* que indica a posição no ranking.
+    O próprio CSS `.position-badge` já define cores e cantos.
+    """
+    return f'<span class="position-badge">{posicao}°</span>'
+
+
+def render_points_badge(pontos: int) -> str:
+    """
+    Renderiza o badge que indica quantos pontos foram ganhos nessa linha.
+    """
+    sinal = "+" if pontos >= 0 else "-"
+    return f'<span class="points-badge">{sinal}{abs(pontos)} pts</span>'
+
+
+def render_progress_bar(percentual: float, label: str | None = None) -> None:
+    """
+    Exibe uma barra de progresso estilizada.
+
+    Args:
+        percentual: Valor entre 0 e 100 (qualquer número será automaticamente
+                    truncado ao intervalo permitido).
+        label: Texto opcional que aparecerá acima da barra.
+    """
+    # Garantir limites válidos
+    pct = max(0, min(100, percentual))
+    # HTML da barra (classe `.progress-bar` + interior `.progress-bar-fill`)
+    barra_html = f'''
+        <div class="progress-bar">
+            <div class="progress-bar-fill" style="width:{pct}%"></div>
+        </div>
+    '''
+    if label:
+        barra_html = f'<div style="font-weight:bold;margin-bottom:4px;">{label}</div>' + barra_html
+    st.markdown(barra_html, unsafe_allow_html=True)
+
+
+def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
+    """
+    Renderiza o *Leaderboard* completo.
+
+    Cada item da lista deve conter, no mínimo:
+        - ``posicao`` (int): posição no ranking
+        - ``nome`` (str): nome do colaborador
+        - ``pontos`` (int): pontuação total
+        - ``ganho`` (int, opcional): pontos ganhos nesta ação (para exibir o badge)
+
+    Exemplo de estrutura:
+    ```python
+    ranking = [
+        {"posicao": 1, "nome": "Ana", "pontos": 120, "ganho": 10},
+        {"posicao": 2, "nome": "Bruno", "pontos": 95},
+        ...
+    ]
+    ```
+    """
+    if not ranking:
+        st.info("Nenhum dado de ranking disponível.")
+        return
+
+    # Card principal
+    st.markdown('<div class="leaderboard-card">', unsafe_allow_html=True)
+
+    # Header do card
+    st.markdown('<div class="leaderboard-header">Leaderboard – Pontuação</div>', unsafe_allow_html=True)
+
+    # Linhas individuais
+    for linha in ranking:
+        pos = linha.get("posicao")
+        nome = linha.get("nome", "")
+        pts = linha.get("pontos", 0)
+        ganho = linha.get("ganho")
+
+        badge_pos = render_position_badge(pos) if pos is not None else ""
+        badge_pts = render_points_badge(ganho) if ganho is not None else ""
+
+        linha_html = f'''
+            <div class="leaderboard-row">
+                <div>{badge_pos} <strong>{nome}</strong></div>
+                <div>{pts} pts {badge_pts}</div>
+            </div>
+        '''
+        st.markdown(linha_html, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)  # fecha .leaderboard-card
