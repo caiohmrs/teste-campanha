@@ -56,6 +56,7 @@ from utils.components import (
     render_contract_entry,
     render_action_link_button,
     render_metric_row,
+    render_leaderboard,          # <-- novo import
 )
 
 # CONFIGURAÇÃO INICIAL
@@ -253,7 +254,36 @@ if cargo_limpo == "colaborador":
     df_msgs = carregar_dados("Mensagens", st.secrets["planilha"]["id"], st.session_state.get('error_log'))
     df_usuarios = carregar_dados("Usuarios", st.secrets["planilha"]["id"], st.session_state.get('error_log'))
     df_logs = carregar_dados("Logs", st.secrets["planilha"]["id"], st.session_state.get('error_log'))
+    # Novo carregamento da aba Leaderboard
+    df_leaderboard = carregar_dados(
+        "Leaderboard",
+        st.secrets["planilha"]["id"],
+        st.session_state.get('error_log')
+    )
     m = None
+
+    # ----------------------------------------------------------------------
+    # Preparar dados do ranking
+    # ----------------------------------------------------------------------
+    ranking = []
+    if df_leaderboard is not None and not df_leaderboard.empty:
+        # Ordena por pontuação total decrescente
+        df_ord = df_leaderboard.sort_values(
+            by="pontos_total",
+            ascending=False,
+            kind="mergesort"
+        ).reset_index(drop=True)
+
+        df_top = df_ord.head(10)
+
+        for idx, row in df_top.iterrows():
+            ranking.append({
+                "posicao": idx + 1,
+                "nome": str(row.get('nome') or '').title(),
+                "pontos": int(row.get('pontos_total') or 0),
+                # opcional: mostrar pontos ganhos na última ação
+                # "ganho": int(row.get('pontos_ganhos') or 0)
+            })
 
     hoje_str = agora.strftime("%d/%m/%Y")
     meus_logs_hoje = df_logs[(df_logs['ID_Usuario'] == u['ID_Usuario']) & (
@@ -306,8 +336,18 @@ if cargo_limpo == "colaborador":
         if st.button("🔄", help="Atualizar GPS"):
             st.rerun()
 
-    tab_missoes, tab_contratos = st.tabs(["🚀 Missões e Presença", "📄 Meus Contratos"])
+    # ----------------------------------------------------------------------
+    # Criação das abas (agora com Ranking)
+    # ----------------------------------------------------------------------
+    tab_missoes, tab_contratos, tab_ranking = st.tabs([
+        "🚀 Missões e Presença",
+        "📄 Meus Contratos",
+        "🏆 Ranking"
+    ])
 
+    # ----------------------------------------------------------------------
+    # Aba Missões e Presença
+    # ----------------------------------------------------------------------
     with tab_missoes:
         render_section_header("REGISTRO DE PRESENÇA")
 
@@ -371,6 +411,9 @@ if cargo_limpo == "colaborador":
                     url=f"https://wa.me/?text={msg_url}"
                 )
 
+    # ----------------------------------------------------------------------
+    # Aba Meus Contratos
+    # ----------------------------------------------------------------------
     with tab_contratos:
         st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
@@ -397,7 +440,7 @@ if cargo_limpo == "colaborador":
                             if arq:
                                 with st.spinner("Enviando..."):
                                     link = salvar_documento_drive(arq, f"ASSINADO_{u['Nome']}_{doc['Nome_Arquivo']}",
-                                                                  st.secrets, st.session_state.get('error_log'))
+                                                              st.secrets, st.session_state.get('error_log'))
                                     if link and atualizar_contrato_enviado(u['ID_Usuario'], doc['Nome_Arquivo'], link,
                                                                            st.secrets, st.session_state.get('error_log')):
                                         st.success("Enviado com sucesso!")
@@ -405,6 +448,16 @@ if cargo_limpo == "colaborador":
                                         st.rerun()
             else:
                 st.info("Nenhum contrato pendente.")
+
+    # ----------------------------------------------------------------------
+    # Aba Ranking
+    # ----------------------------------------------------------------------
+    with tab_ranking:
+        render_section_header("🏆 RANKING GLOBAL")
+        if ranking:
+            render_leaderboard(ranking)
+        else:
+            st.info("Ainda não há dados de pontuação para exibir.")
 
     st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
     st.divider()
