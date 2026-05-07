@@ -715,10 +715,10 @@ def inject_styles():
     logo após st.set_page_config().
     
     Example:
-        >>> import streamlit as st
-        >>> from utils.styles import inject_styles
-        >>> st.set_page_config(page_title="Minha App")
-        >>> inject_styles()
+        #>>> import streamlit as st
+        #>>> from utils.styles import inject_styles
+        #>>> st.set_page_config(page_title="Minha App")
+        #>>> inject_styles()
     """
     import streamlit as st
     st.markdown(get_css(), unsafe_allow_html=True)
