@@ -56,6 +56,7 @@ from utils.components import (
     render_contract_entry,
     render_action_link_button,
     render_metric_row,
+    render_progress_bar,
     render_leaderboard,          # <-- novo import
 )
 
@@ -290,6 +291,37 @@ if cargo_limpo == "colaborador":
         df_logs['Data_Hora'].str.contains(hoje_str))] if df_logs is not None else pd.DataFrame()
     qtd_acoes_hoje = len(meus_logs_hoje)
 
+    # -------------------------------------------------------------
+    # Variáveis auxiliares para a aba Ranking
+    # -------------------------------------------------------------
+    # 1) Pontos totais do usuário (pontos acumulados)
+    total_pontos = 0
+    # 2) Posição atual no ranking (1 = primeiro)
+    posicao_atual = None
+    # 3) Pontos ganhos hoje (para barra de progresso)
+    pontos_hoje = 0
+    # 4) Meta diária – ajuste livre (ex.: 50 pontos por dia)
+    meta_diaria = 50
+
+    if df_leaderboard is not None and not df_leaderboard.empty:
+        # Busca a linha do usuário logado
+        linha_usuario = df_leaderboard[df_leaderboard['id_usuario'] == u['ID_Usuario']]
+        if not linha_usuario.empty:
+            total_pontos = int(linha_usuario.iloc[0].get('pontos_total') or 0)
+            # posição já foi calculada ao montar o ranking (lista `ranking`);
+            # basta encontrar o dicionário correspondente:
+            for r in ranking:
+                if str(r.get('nome')).strip().lower() == str(u['Nome']).strip().lower():
+                    posicao_atual = r.get('posicao')
+                    break
+            # pontos ganhos hoje → soma dos registros de hoje na planilha Leaderboard
+            pontos_hoje = int(
+                df_leaderboard[
+                    (df_leaderboard['id_usuario'] == u['ID_Usuario']) &
+                    (df_leaderboard['data_dia'] == hoje_str)
+                ]['pontos_ganhos'].fillna(0).sum()
+            )
+
     render_status_bar(qtd_acoes_hoje, qtd_acoes_hoje > 0)
 
     if df_msgs is not None and not df_msgs.empty:
@@ -440,7 +472,7 @@ if cargo_limpo == "colaborador":
                             if arq:
                                 with st.spinner("Enviando..."):
                                     link = salvar_documento_drive(arq, f"ASSINADO_{u['Nome']}_{doc['Nome_Arquivo']}",
-                                                              st.secrets, st.session_state.get('error_log'))
+                                                                  st.secrets, st.session_state.get('error_log'))
                                     if link and atualizar_contrato_enviado(u['ID_Usuario'], doc['Nome_Arquivo'], link,
                                                                            st.secrets, st.session_state.get('error_log')):
                                         st.success("Enviado com sucesso!")
@@ -450,12 +482,43 @@ if cargo_limpo == "colaborador":
                 st.info("Nenhum contrato pendente.")
 
     # ----------------------------------------------------------------------
-    # Aba Ranking
+    # Aba Ranking – layout compacto
     # ----------------------------------------------------------------------
     with tab_ranking:
+        # 1️⃣ Cabeçalho da seção (grande, não colocado em coluna)
         render_section_header("🏆 RANKING GLOBAL")
+
+        # 2️⃣ Área de resumo rápido – duas colunas
+        col_resumo, col_barra = st.columns([2, 1])
+        with col_resumo:
+            # Status (ações hoje) – componente pequeno
+            render_status_bar(qtd_acoes_hoje, qtd_acoes_hoje > 0)
+            # Informativo opcional sobre regras do ranking
+            render_info_banner(
+                titulo="Como funciona o ranking",
+                subtítulo="",
+                mensagem=(
+                    "São contabilizadas apenas as ações que geram pontuação. "
+                    "Limite diário por ação → veja detalhes na aba Missões."
+                )
+            )
+            # Métricas resumidas (pontos total, posição, ações hoje)
+            render_metric_row([
+                {"label": "PONTOS TOTAL", "value": total_pontos},
+                {"label": "POSIÇÃO", "value": posicao_atual or "-", "secondary": True},
+                {"label": "AÇÕES HOJE", "value": qtd_acoes_hoje}
+            ])
+
+        with col_barra:
+            # Barra de progresso da meta diária – elemento pequeno
+            render_progress_bar(
+                percentual=min(100, (pontos_hoje / meta_diaria) * 100 if meta_diaria else 0),
+                label="Progresso da meta diária"
+            )
+
+        # 3️⃣ Leaderboard – ocupa a largura completa (não em colunas)
         if ranking:
-            render_leaderboard(ranking)
+            render_leaderboard(ranking)   # já inclui badges de posição
         else:
             st.info("Ainda não há dados de pontuação para exibir.")
 
