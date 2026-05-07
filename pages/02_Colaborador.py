@@ -321,6 +321,17 @@ if cargo_limpo == "colaborador":
         df_ordenado = df_ultimas.sort_values('pontos_total', ascending=False).reset_index(drop=True)
         df_ordenado['posicao'] = df_ordenado.index + 1
 
+        # --------------------------------------------------------------
+        # 2️⃣  Garantir que a coluna de ganhos seja numérica
+        # --------------------------------------------------------------
+        #   - Converte valores que vieram como texto para int
+        #   - Valores não convertíveis (NaN, vazios) ficam como 0
+        df_ordenado['pontos_ganhos'] = (
+            pd.to_numeric(df_ordenado['pontos_ganhos'], errors='coerce')
+            .fillna(0)
+            .astype(int)
+        )
+
         # Construir lista de dicionários para o componente
         ranking = df_ordenado[['posicao', 'nome', 'pontos_total', 'pontos_ganhos']].rename(
             columns={'nome': 'nome', 'pontos_total': 'pontos', 'pontos_ganhos': 'ganho'}

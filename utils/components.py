@@ -229,12 +229,35 @@ def render_position_badge(posicao: int) -> str:
     return f'<span class="position-badge">{posicao}°</span>'
 
 
-def render_points_badge(pontos: int) -> str:
+def render_points_badge(pontos) -> str:
     """
-    Renderiza o badge que indica quantos pontos foram ganhos nessa linha.
+    Renderiza o badge que indica quantos pontos foram ganhos.
+
+    O parâmetro ``pontos`` pode ser int, float, str ou até ``None``.
+    Se não for possível convertê‑lo para inteiro, a função devolve
+    uma *string* vazia (nenhum badge será exibido) – evitando o
+    ``TypeError`` que ocorria ao comparar string com int.
     """
-    sinal = "+" if pontos >= 0 else "-"
-    return f'<span class="points-badge">{sinal}{abs(pontos)} pts</span>'
+    # --------------------------------------------------------------
+    # Tenta converter para inteiro (aceita "10", 10.0, "10.5" etc.)
+    # --------------------------------------------------------------
+    try:
+        pts = int(float(pontos))
+    except (TypeError, ValueError):
+        # Valor não numérico → não exibe badge
+        return ""
+
+    # --------------------------------------------------------------
+    # Opcional: não mostrar badge se for zero (pode remover se quiser)
+    # --------------------------------------------------------------
+    if pts == 0:
+        return ""
+
+    # --------------------------------------------------------------
+    # Monta o HTML do badge com sinal + ou -
+    # --------------------------------------------------------------
+    sinal = "+" if pts >= 0 else "-"
+    return f'<span class="points-badge">{sinal}{abs(pts)} pts</span>'
 
 
 def render_progress_bar(percentual: float, label: str | None = None) -> None:
