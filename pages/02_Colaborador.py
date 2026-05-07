@@ -181,6 +181,7 @@ def modal_checkin(u, agora):
                     try:
                         horario_formatado = agora_real.strftime("%Y-%m-%d %H:%M:%S")
                         cookie_manager.set("comando2026_checkin_time", horario_formatado)
+                    ...
                     except Exception as e:
                         st.session_state['error_log'].append({
                             'data': get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),
@@ -322,7 +323,7 @@ if cargo_limpo == "colaborador":
         # ---------------------------------
         # 3️⃣ Ranking geral (top 10)
         # ---------------------------------
-        # Obter a última entrada de cada usuário (mais recente)
+        # a)  Última entrada de cada usuário (mais recente)
         df_ultimas = df_leaderboard.sort_values('ultima_atualizacao').drop_duplicates('id_usuario', keep='last')
         df_ordenado = df_ultimas.sort_values('pontos_total', ascending=False).reset_index(drop=True)
         df_ordenado['posicao'] = df_ordenado.index + 1
@@ -532,10 +533,13 @@ if cargo_limpo == "colaborador":
                                      type="primary"):
                             if arq:
                                 with st.spinner("Enviando..."):
-                                    link = salvar_documento_drive(arq, f"ASSINADO_{u['Nome']}_{doc['Nome_Arquivo']}",
-                                                                  st.secrets, st.session_state.get('error_log'))
+                                    link = salvar_documento_drive(arq,
+                                                                  f"ASSINADO_{u['Nome']}_{doc['Nome_Arquivo']}",
+                                                                  st.secrets,
+                                                                  st.session_state.get('error_log'))
                                     if link and atualizar_contrato_enviado(u['ID_Usuario'], doc['Nome_Arquivo'], link,
-                                                                           st.secrets, st.session_state.get('error_log')):
+                                                                           st.secrets,
+                                                                           st.session_state.get('error_log')):
                                         st.success("Enviado com sucesso!")
                                         time.sleep(1)
                                         st.rerun()
@@ -571,7 +575,6 @@ if cargo_limpo == "colaborador":
         # -------------------------------------------------------------
         # 3️⃣  Leaderboard Geral
         # -------------------------------------------------------------
-        # **Leaderboard – agora exibido fora de qualquer expander**
         if ranking:
             render_leaderboard(ranking)
         else:

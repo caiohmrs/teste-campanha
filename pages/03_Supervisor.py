@@ -266,25 +266,42 @@ if cargo_limpo == "supervisor":
             total_pontos = int(df_user.iloc[-1]['pontos_total'])
 
         # --------------------------------------------------------------
-        # 3️⃣  Ranking geral (top 10) – usado no card “Leaderboard”
+        # 3️⃣  Ranking geral (top 10) – apenas supervisores
         # --------------------------------------------------------------
-        df_ultimas = df_leaderboard.sort_values('ultima_atualizacao').drop_duplicates('id_usuario', keep='last')
+        # a)  Última atualização de cada usuário
+        df_ultimas = df_leaderboard.sort_values('ultima_atualizacao') \
+                                   .drop_duplicates('id_usuario', keep='last')
+
+        # b)  Unir com a planilha de usuários para obter o cargo
+        df_usuarios_tmp = df_usuarios[['ID_Usuario', 'Cargo']].rename(columns={'ID_Usuario': 'id_usuario'})
+        df_ultimas = df_ultimas.merge(df_usuarios_tmp, on='id_usuario', how='left')
+
+        # c)  Filtrar somente usuários cujo cargo contém “supervisor”
+        df_ultimas = df_ultimas[
+            df_ultimas['Cargo'].astype(str).str.lower().str.contains('supervisor')
+        ]
+
+        # d)  Ordenar por pontuação total (desc) e recomputar a posição
         df_ordenado = df_ultimas.sort_values('pontos_total', ascending=False).reset_index(drop=True)
         df_ordenado['posicao'] = df_ordenado.index + 1
 
-        # garante que a coluna de ganhos seja numérica
+        # e)  Garantir que a coluna de ganhos seja numérica
         df_ordenado['pontos_ganhos'] = (
             pd.to_numeric(df_ordenado['pontos_ganhos'], errors='coerce')
             .fillna(0)
             .astype(int)
         )
+
+        # f)  Converter para a lista esperada por render_leaderboard()
         ranking = df_ordenado[['posicao', 'nome', 'pontos_total', 'pontos_ganhos']].rename(
-            columns={'nome': 'nome',
-                     'pontos_total': 'pontos',
-                     'pontos_ganhos': 'ganho'}
+            columns={
+                'nome'        : 'nome',
+                'pontos_total': 'pontos',
+                'pontos_ganhos': 'ganho'
+            }
         ).to_dict('records')
 
-        # posição atual do supervisor (se houver)
+        # g)  Posição atual do supervisor (após filtro)
         linha_user = df_ordenado[df_ordenado['id_usuario'] == u['ID_Usuario']]
         if not linha_user.empty:
             posicao_atual = int(linha_user.iloc[0]['posicao'])
@@ -526,7 +543,7 @@ if cargo_limpo == "supervisor":
                        width='stretch')
 
     # ----------------------------------------------------------------------
-    # Aba Ranking – **accordion (expander)** para melhor usabilidade
+    # Aba Ranking – accordion (expander) para melhor usabilidade
     # ----------------------------------------------------------------------
     with tab_ranking:
         # -------------------------------------------------------------
