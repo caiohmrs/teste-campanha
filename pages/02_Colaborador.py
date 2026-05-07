@@ -181,7 +181,6 @@ def modal_checkin(u, agora):
                     try:
                         horario_formatado = agora_real.strftime("%Y-%m-%d %H:%M:%S")
                         cookie_manager.set("comando2026_checkin_time", horario_formatado)
-                    ...
                     except Exception as e:
                         st.session_state['error_log'].append({
                             'data': get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),
@@ -190,7 +189,6 @@ def modal_checkin(u, agora):
                             'traceback': traceback.format_exc(),
                             'tipo': type(e).__name__
                         })
-
                     status.update(label="✅ ENTRADA REGISTRADA!", state="complete")
                     time.sleep(2)
                     st.rerun()
@@ -474,7 +472,7 @@ if cargo_limpo == "colaborador":
                 unsafe_allow_html=True)
 
             if st.button(f"CONCLUIR MISSÃO DE HOJE", width='stretch', key="btn_tarefa_fixa"):
-                registrar_acao(u['ID_Usuario'], f"CONCLUIU MISSÃO DE HOJE: {t_txt}", localizacao=st.session_state.get('last_coords'),
+                registrar_acao(u['ID_Usuario'], f"CONCLUIR MISSÃO DE HOJE: {t_txt}", localizacao=st.session_state.get('last_coords'),
                                feedback="", secrets=st.secrets, error_log=st.session_state.get('error_log'))
                 st.success("MISSÃO REGISTRADA COM SUCESSO!")
 
