@@ -705,7 +705,7 @@ def get_css():
         }}
 
         /* ----------------------------------------------------------------------
-           28. COMPONENTES DE GAMAFICAÇÃO (LEADERBOARD, BADGES, BARRA DE PROGRESSO)
+           28. COMPONENTES DE GAMIFICAÇÃO (LEADERBOARD, BADGES, BARRA DE PROGRESSO)
            ---------------------------------------------------------------------- */
 
         /* Card que contém a tabela de pontuação */

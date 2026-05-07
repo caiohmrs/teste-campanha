@@ -305,10 +305,9 @@ def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
         st.info("Nenhum dado de ranking disponível.")
         return
 
-    # Card principal
-    st.markdown('<div class="leaderboard-card">', unsafe_allow_html=True)
 
     # Header do card
+    st.space("small")
     st.markdown('<div class="leaderboard-header">Leaderboard – Pontuação</div>', unsafe_allow_html=True)
 
     # Linhas individuais
