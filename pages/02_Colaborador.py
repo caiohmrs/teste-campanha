@@ -304,6 +304,20 @@ if cargo_limpo == "colaborador":
                 "secondary": False
             })
 
+            # ----- preenchimento do progresso das ações -----
+            if limite is None or limite == 0:
+                percent = 100
+                descricao_percent = f"{feitas} / ∞"
+            else:
+                percent = min(100, int(feitas / limite * 100))
+                descricao_percent = f"{feitas} / {limite}"
+
+            acoes_progresso.append({
+                "label": nome_elegante,
+                "value": descricao_percent,
+                "percent": percent
+            })
+
         # ---------------------------------
         # 2️⃣ Métricas do usuário corrente
         # ---------------------------------
