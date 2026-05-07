@@ -16,7 +16,7 @@ import io
 import sys
 import traceback
 import json
-from typing import List, Any  # <-- novo import para tipagem
+from typing import List, Any, Dict  # ← adicionada a tipagem Dict
 
 from funcoes import (
     get_agora_br,
@@ -270,10 +270,23 @@ if cargo_limpo == "colaborador":
     # Resumo das ações realizadas hoje (para exibir na aba Ranking)
     # --------------------------------------------------------------
     resumo_acoes: List[Dict[str, Any]] = []
+
+    # Variáveis auxiliares para a aba Ranking
+    pontos_hoje = 0
+    meta_diaria = 100            # Valor da meta diária – pode ser ajustado conforme necessidade
+    total_pontos = 0
+    posicao_atual = None
+    qtd_acoes_hoje = 0
+    ranking = []
+
     if df_leaderboard is not None and not df_leaderboard.empty:
+        # Preparar filtros de data
         hoje_str = agora.strftime("%d/%m/%Y")
         linhas_hoje = df_leaderboard[df_leaderboard['data_dia'] == hoje_str]
 
+        # ------------------------------
+        # 1️⃣ Resumo das ações por tipo
+        # ------------------------------
         for acao, _ in PONTUACAO.items():
             limite = LIMITE_DIARIO.get(acao)               # None → ilimitado
             feitas = len(linhas_hoje[linhas_hoje['tipo_acao'] == acao])
@@ -286,7 +299,37 @@ if cargo_limpo == "colaborador":
                 "secondary": False
             })
 
-    m = None  # <-- será renomeado logo abaixo
+        # ---------------------------------
+        # 2️⃣ Métricas do usuário corrente
+        # ---------------------------------
+        # Filtrar linhas referentes ao usuário logado
+        df_user = df_leaderboard[df_leaderboard['id_usuario'] == u['ID_Usuario']]
+
+        # Pontos ganhos hoje
+        if not df_user.empty:
+            pontos_hoje = int(df_user[df_user['data_dia'] == hoje_str]['pontos_ganhos'].astype(int).sum())
+            qtd_acoes_hoje = df_user[df_user['data_dia'] == hoje_str].shape[0]
+
+            # Total acumulado (última linha do usuário)
+            total_pontos = int(df_user.iloc[-1]['pontos_total'])
+
+        # ---------------------------------
+        # 3️⃣ Ranking geral (top 10)
+        # ---------------------------------
+        # Obter a última entrada de cada usuário (mais recente)
+        df_ultimas = df_leaderboard.sort_values('ultima_atualizacao').drop_duplicates('id_usuario', keep='last')
+        df_ordenado = df_ultimas.sort_values('pontos_total', ascending=False).reset_index(drop=True)
+        df_ordenado['posicao'] = df_ordenado.index + 1
+
+        # Construir lista de dicionários para o componente
+        ranking = df_ordenado[['posicao', 'nome', 'pontos_total', 'pontos_ganhos']].rename(
+            columns={'nome': 'nome', 'pontos_total': 'pontos', 'pontos_ganhos': 'ganho'}
+        ).to_dict('records')
+
+        # Posição atual do usuário
+        linha_user = df_ordenado[df_ordenado['id_usuario'] == u['ID_Usuario']]
+        if not linha_user.empty:
+            posicao_atual = int(linha_user.iloc[0]['posicao'])
 
     # ----------------------------------------------------------------------
     # Mensagem do dia (variável de mensagem)
@@ -420,7 +463,7 @@ if cargo_limpo == "colaborador":
 
         render_section_header("📝 NOVO CONTRATO")
 
-        url_formulario = "https://forms.gle/9fqxvN8XfCmTRh9EA"
+        url_formulario = "https://forms.gle/9fqxN8XfCmTRh9EA"
         st.link_button("📋 PREENCHER DADOS PARA GERAR CONTRATO", url_formulario, width='stretch', type="primary")
 
         st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
