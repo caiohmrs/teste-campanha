@@ -215,7 +215,6 @@ def modal_checkout(u, agora):
         if foto_out:
             agora_real = get_agora_br()
             gps_out = st.session_state.get('last_coords', "Sem GPS")
-
             with st.spinner("📡 ENVIANDO DADOS..."):
                 nome_img = f"checkout_{u['Nome']}_{agora_real.strftime('%d-%m-%Y_%H-%M')}.jpg"
                 link_drive = salvar_foto_drive(foto_out, nome_img, st.secrets, st.session_state.get('error_log'))
@@ -224,15 +223,11 @@ def modal_checkout(u, agora):
                     acao_texto = f"Check-out | Foto: {link_drive}"
                     feedback_texto = f"{clima} | Obs: {obs if obs else 'Nenhuma'}"
 
-                    registrar_acao(
-                        u['ID_Usuario'],
-                        acao_texto,
-                        localizacao=gps_out,
-                        feedback=feedback_texto,
-                        secrets=st.secrets,
-                        error_log=st.session_state.get('error_log')
-                    )
-
+                    registrar_acao(u['ID_Usuario'], acao_texto,
+                                   localizacao=gps_out,
+                                   feedback=feedback_texto,
+                                   secrets=st.secrets,
+                                   error_log=st.session_state.get('error_log'))
                     try:
                         if "comando2026_checkin_time" in cookie_manager.get_all():
                             cookie_manager.delete("comando2026_checkin_time")
@@ -295,7 +290,7 @@ if cargo_limpo == "colaborador":
 
             descricao = f"{feitas} / ∞" if limite is None else f"{feitas} / {limite}"
 
-            # ----- usa nome elegante -----
+            # ----- nome elegante -----
             nome_elegante = ACTION_LABELS.get(acao, acao.replace('_', ' ').title())
 
             resumo_acoes.append({
@@ -304,18 +299,12 @@ if cargo_limpo == "colaborador":
                 "secondary": False
             })
 
-            # ----- preenchimento do progresso das ações -----
-            if limite is None or limite == 0:
-                percent = 100
-                descricao_percent = f"{feitas} / ∞"
-            else:
-                percent = min(100, int(feitas / limite * 100))
-                descricao_percent = f"{feitas} / {limite}"
-
+            # ----- preenchimento do progresso das ações (formato usado pelo component) -----
             acoes_progresso.append({
-                "label": nome_elegante,
-                "value": descricao_percent,
-                "percent": percent
+                "nome":   nome_elegante,
+                "feitas": feitas,
+                "limite": limite,
+                "pontos": PONTUACAO[acao]
             })
 
         # ---------------------------------
