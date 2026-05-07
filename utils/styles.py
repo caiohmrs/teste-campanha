@@ -16,16 +16,16 @@
 
 CORES = {
     'primaria': '#FFD700',      # Ouro (Brilhante, mas
-
     'secundaria': '#B22222',    # Vermelho Tijolo (Sólido
-
     'texto': '#1A1A1A',         # Grafite Escuro
-
     'fundo': '#E2E8F0',         # Cinza Azulado (Moderno,
-
     'branco': '#FFFFFF',        # Branco Puro
     'gradiente_inicio': '#FFFFFF', # Branco
     'gradiente_fim': '#D1D5DB',    # Cinza Metálico
+    # Cores adicionais para gamificação
+    'gold': '#FFCC00',
+    'silver': '#C0C0C0',
+    'bronze': '#CD7F32',
 }
 
 # =============================================================================
@@ -703,6 +703,84 @@ def get_css():
         .metric-row-value-secondary {{
             color: var(--cor-secundaria);
         }}
+
+        /* ----------------------------------------------------------------------
+           28. COMPONENTES DE GAMAFICAÇÃO (LEADERBOARD, BADGES, BARRA DE PROGRESSO)
+           ---------------------------------------------------------------------- */
+
+        /* Card que contém a tabela de pontuação */
+        .leaderboard-card {{
+            background-color: var(--cor-branco);
+            border: 4px solid var(--cor-texto);
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
+            padding: 20px;
+            margin-bottom: 25px;
+        }}
+
+        /* Cabeçalho do card de leaderboard */
+        .leaderboard-header {{
+            background-color: var(--cor-primaria);
+            border-bottom: 3px solid var(--cor-texto);
+            padding: 10px 15px;
+            text-align: center;
+            font-family: var(--fonte-titulo);
+            font-style: italic;
+            color: var(--cor-texto);
+            text-transform: uppercase;
+        }}
+
+        /* Linha individual da tabela (nome + pontuação) */
+        .leaderboard-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--cor-fundo);
+            font-family: var(--fonte-texto);
+            color: var(--cor-texto);
+        }}
+
+        /* Badge que destaca a posição (1°, 2°, 3°, …) */
+        .position-badge {{
+            background-color: var(--cor-secundaria);
+            color: var(--cor-branco);
+            border: 2px solid var(--cor-texto);
+            border-radius: var(--border-radius);
+            padding: 2px 6px;
+            font-family: var(--fonte-titulo);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }}
+
+        /* Badge de pontos (ex.: “+10 pts”) */
+        .points-badge {{
+            background-color: var(--cor-primaria);
+            color: var(--cor-texto);
+            border: 2px solid var(--cor-texto);
+            border-radius: var(--border-radius);
+            padding: 2px 6px;
+            font-family: var(--fonte-titulo);
+            font-size: 0.85rem;
+        }}
+
+        /* Barra de progresso para metas diárias */
+        .progress-bar {{
+            width: 100%;
+            background-color: var(--cor-fundo);
+            border: 2px solid var(--cor-texto);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            height: 12px;
+            margin-top: 4px;
+        }}
+
+        .progress-bar-fill {{
+            height: 100%;
+            background-color: var(--cor-secundaria);
+            width: 0%;               /* será preenchido dinamicamente via style inline */
+            transition: width 0.4s ease;
+        }}
+
     </style>
     """
 
