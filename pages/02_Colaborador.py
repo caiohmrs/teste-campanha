@@ -340,7 +340,7 @@ if cargo_limpo == "colaborador":
                 unsafe_allow_html=True)
 
             if st.button(f"CONCLUIR MISSÃO DE HOJE", width='stretch', key="btn_tarefa_fixa"):
-                registrar_acao(u['ID_Usuario'], f"CONCLUIU: {t_txt}", localizacao=st.session_state.get('last_coords'),
+                registrar_acao(u['ID_Usuario'], f"CONCLUIU MISSÃO DE HOJE: {t_txt}", localizacao=st.session_state.get('last_coords'),
                                feedback="", secrets=st.secrets, error_log=st.session_state.get('error_log'))
                 st.success("MISSÃO REGISTRADA COM SUCESSO!")
 
@@ -361,7 +361,7 @@ if cargo_limpo == "colaborador":
 
         with col_m2:
             if st.button("💬 TRAGA UM NOVO AMIGO PARA SER COLABORADOR!", width='stretch', key="fixo_whats"):
-                registrar_acao(u['ID_Usuario'], "AÇÃO: TRAZER NOVO COLABORADOR!",
+                registrar_acao(u['ID_Usuario'], "AÇÃO: TRAZER NOVO COLABORADOR NO WHATSAPP!",
                                localizacao=st.session_state.get('last_coords'), feedback="", secrets=st.secrets,
                                error_log=st.session_state.get('error_log'))
                 mensagem_pronta = "Salve! Já acompanha o trabalho do Max Maciel pelo DF?? Sou colaborador dele e estou muito feliz com o trabalho que estamos fazendo. Vamos juntos nessa campanha? 🚀 https://forms.gle/NzJy6NEynbaPyD6w6"
