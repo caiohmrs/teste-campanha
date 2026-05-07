@@ -86,13 +86,13 @@ if "mensagem_exibida" not in st.session_state:
     st.session_state["mensagem_exibida"] = False
 # -----------------------------------------------------
 # ----------------------------------------------------------------------
-# 1️⃣  Garantir que a sessão tenha a chave "usuario_logado"
+# 1️⃣   Garantir que a sessão tenha a chave "usuario_logado"
 # ----------------------------------------------------------------------
 if "usuario_logado" not in st.session_state:
     st.session_state["usuario_logado"] = None
 
 # ----------------------------------------------------------------------
-# 2️⃣  Se não houver usuário logado, enviar para a tela de login
+# 2️⃣   Se não houver usuário logado, enviar para a tela de login
 # ----------------------------------------------------------------------
 if st.session_state["usuario_logado"] is None:
     # limpa possíveis caches que já foram criados antes do redirect
@@ -349,17 +349,26 @@ if cargo_limpo == "colaborador":
             posicao_atual = int(linha_user.iloc[0]['posicao'])
 
         # --------------------------------------------------------------
-        # 5️⃣  Montar lista de ações para o novo componente
+        # 5️⃣  Montar lista de ações **apenas** para o usuário logado
         # --------------------------------------------------------------
         # Cada dicionário deve conter:
         #   - nome   : nome legível da ação
-        #   - feitas : quantas vezes foi feita hoje
+        #   - feitas : quantas vezes foi feita hoje **pelo usuário**
         #   - limite : limite diário (None → ilimitado)
         #   - pontos : quantos pontos vale cada ocorrência
         acoes_progresso = []
+
+        # 1️⃣  Filtrar o Leaderboard para o usuário atual
+        df_user_today = df_leaderboard[
+            (df_leaderboard['id_usuario'] == u['ID_Usuario']) &
+            (df_leaderboard['data_dia'] == hoje_str)
+        ]
+
         for acao, pts_por_acao in PONTUACAO.items():
             limite = LIMITE_DIARIO.get(acao)                 # None = sem limite
-            feitas = int(linhas_hoje[linhas_hoje['tipo_acao'] == acao].shape[0])
+
+            # Contar quantas vezes a ação foi realizada **pelo usuário** hoje
+            feitas = int(df_user_today[df_user_today['tipo_acao'] == acao].shape[0])
 
             # ----- usa nome elegante -----
             nome_elegante = ACTION_LABELS.get(acao, acao.replace('_', ' ').title())
