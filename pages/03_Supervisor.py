@@ -56,6 +56,12 @@ from utils.components import (
     render_contract_entry,
     render_action_link_button,
     render_metric_row,
+    render_progress_bar,
+    render_leaderboard,
+    render_position_badge,
+    render_points_badge,
+    render_action_progress,
+    render_info_ranking  # ← novo import
 )
 
 # CONFIGURAÇÃO INICIAL
@@ -256,8 +262,8 @@ if cargo_limpo == "supervisor":
         if st.button("🔄", help="Atualizar GPS"):
             st.rerun()
 
-    tab_missoes, tab_contratos, tab_equipe = st.tabs([
-        "🚀 MISSÕES E PRESENÇA", "📄 MEUS CONTRATOS", "📈 ACOMPANHAMENTO"
+    tab_missoes, tab_contratos, tab_equipe, tab_ranking = st.tabs([
+        "🚀 MISSÕES E PRESENÇA", "📄 MEUS CONTRATOS", "📈 ACOMPANHAMENTO", "🏆 Ranking"
     ])
 
     with tab_missoes:
@@ -282,7 +288,7 @@ if cargo_limpo == "supervisor":
                 f"<p style='text-align: center; font-weight: bold; font-size: 1.1rem; color: var(--cor-secundaria);'>{t_txt}</p>",
                 unsafe_allow_html=True)
             if st.button("CONCLUIR MISSÃO DE HOJE", width='stretch', key="sup_task_done"):
-                registrar_acao(u['ID_Usuario'], f"CONCLUIU: {t_txt}",
+                registrar_acao(u['ID_Usuario'], f"CONCLUIU MISSÃO DE HOJE: {t_txt}",
                                localizacao=st.session_state.get('last_coords'), feedback="",
                                secrets=st.secrets, error_log=st.session_state.get('error_log'))
                 st.success("MISSÃO REGISTRADA!")
@@ -290,7 +296,7 @@ if cargo_limpo == "supervisor":
         st.markdown("<h3 style='font-size: 1.2rem;'>📲 AÇÕES DE REDE</h3>", unsafe_allow_html=True)
         cm1, cm2 = st.columns(2)
         with cm1:
-            if st.button("📸 INSTAGRAM", width='stretch', key="sup_insta"):
+            if st.button("📸 CURTA COMENTE E COMPARTILHE O ÚLTIMO POST DO INSTA!", width='stretch', key="sup_insta"):
                 registrar_acao(u['ID_Usuario'], "AÇÃO: INTERAÇÃO INSTAGRAM",
                                localizacao=st.session_state.get('last_coords'), feedback="",
                                secrets=st.secrets, error_log=st.session_state.get('error_log'))
@@ -299,8 +305,8 @@ if cargo_limpo == "supervisor":
                     url="https://www.instagram.com/maxmacieldf/"
                 )
         with cm2:
-            if st.button("💬 WHATSAPP", width='stretch', key="sup_whats"):
-                registrar_acao(u['ID_Usuario'], "AÇÃO: MOBILIZAÇÃO WHATSAPP",
+            if st.button("💬 CHAME UM AMIGO PARA SER VOLUNTÁRIO", width='stretch', key="sup_whats"):
+                registrar_acao(u['ID_Usuario'], "AÇÃO: TRAZER NOVO COLABORADOR NO WHATSAPP!",
                                localizacao=st.session_state.get('last_coords'), feedback="",
                                secrets=st.secrets, error_log=st.session_state.get('error_log'))
                 msg_zap = urllib.parse.quote(
@@ -427,6 +433,50 @@ if cargo_limpo == "supervisor":
         st.link_button("📲 ENVIAR RELATÓRIO P/ COORDENAÇÃO",
                        f"https://api.whatsapp.com/send?text={urllib.parse.quote(rel_txt)}",
                        width='stretch')
+
+    # ----------------------------------------------------------------------
+    # Aba Ranking – **accordion (expander)** para melhor usabilidade
+    # ----------------------------------------------------------------------
+    with tab_ranking:
+        # -------------------------------------------------------------
+        # 1️⃣  Explicação do Ranking
+        # -------------------------------------------------------------
+        with st.expander("⚙️ Como funciona o Ranking", expanded=False):
+            render_info_ranking(
+                titulo="Como funciona o Ranking",
+                mensagem=(
+                    "As ações de CheckIn, CheckOut, Completar a Missão do dia, Interagir no Insta e Convidar um novo amigo pelo whatsapp gera pontuação. "
+                    "Cada ação tem um limite diário e uma pontuação concedida (veja abaixo no progresso de ações). "
+                    "Somente as ações aprovadas aumentam o total de pontos."
+                )
+            )
+
+        # -------------------------------------------------------------
+        # 2️⃣  Progresso das Ações do Usuário
+        # -------------------------------------------------------------
+        with st.expander("🚀 Progresso das minhas ações", expanded=False):
+            if acoes_progresso:
+                render_action_progress(acoes_progresso)
+            else:
+                st.info("Nenhuma ação realizada ainda.")
+
+        # -------------------------------------------------------------
+        # 3️⃣  Leaderboard Geral
+        # -------------------------------------------------------------
+        # **Leaderboard – agora exibido fora de qualquer expander**
+        if ranking:
+            render_leaderboard(ranking)
+        else:
+            st.info("Ainda não há dados de pontuação para exibir.")
+
+    st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown("<h3 style='font-size: 1.2rem; text-align: left;'>🆘 PRECISA DE AJUDA?</h3>", unsafe_allow_html=True)
+
+    col_sup1, col_sup2 = st.columns(2)
+    id_supervisor_dele = str(u.get('ID_Supervisor', '')).strip().lower()
+    dados_supervisor = df_usuarios[df_usuarios[
+                                       'ID_Usuario'].str.lower().str.strip() == id_supervisor_dele] if df_usuarios is not None else pd.DataFrame()
 
     st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
     st.markdown("<h3 style='font-size: 1.2rem; text-align: left;'>🛠️ SUPORTE DE LIDERANÇA</h3>", unsafe_allow_html=True)
