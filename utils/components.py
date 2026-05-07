@@ -380,3 +380,25 @@ def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
         st.markdown(linha_html, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)  # fecha .leaderboard-card
+
+
+# ----------------------------------------------------------------------
+# NOVO COMPONENTE – INFORMAÇÃO DO RANKING
+# ----------------------------------------------------------------------
+def render_info_ranking(titulo: str, mensagem: str) -> None:
+    """
+    Renderiza um card informativo *específico* para explicar como funciona
+    o ranking. O visual é mais compacto que ``render_info_banner`` e
+    utiliza a classe CSS ``.info-ranking-card`` definida em
+    ``utils/styles.py``.
+
+    Args:
+        titulo:   Título que aparecerá em ``<h2>`` (ex.: "⚙️ Como funciona o ranking").
+        mensagem: Texto já formatado em HTML/Markdown (pode conter ``<ul>``, ``<li>``, etc.).
+    """
+    st.markdown(f'''
+        <div class="info-ranking-card">
+            <h2>{titulo}</h2>
+            <p>{mensagem}</p>
+        </div>
+    ''', unsafe_allow_html=True)
