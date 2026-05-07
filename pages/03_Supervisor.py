@@ -16,6 +16,7 @@ import io
 import sys
 import traceback
 import json
+from typing import List, Any, Dict  # ← novo import de tipagem
 
 from funcoes import (
     get_agora_br,
@@ -61,8 +62,10 @@ from utils.components import (
     render_position_badge,
     render_points_badge,
     render_action_progress,
-    render_info_ranking  # ← novo import
+    render_info_ranking  # ← já estava importado
 )
+# ← novos imports de gamificação
+from utils.gamification import PONTUACAO, LIMITE_DIARIO, ACTION_LABELS
 
 # CONFIGURAÇÃO INICIAL
 st.set_page_config(
@@ -152,6 +155,7 @@ def modal_checkin(u, agora):
             with st.status("🚀 PROCESSANDO REGISTRO...", expanded=True) as status:
                 nome_img = f"checkin_{u['Nome']}_{agora_real.strftime('%d-%m-%Y_%H-%M')}.jpg"
                 link = salvar_foto_drive(foto_in, nome_img, st.secrets, st.session_state.get('error_log'))
+
                 if link:
                     registrar_acao(u['ID_Usuario'], f"Check-in | Foto: {link}", localizacao=gps_in,
                                    feedback="", secrets=st.secrets, error_log=st.session_state.get('error_log'))
@@ -192,10 +196,12 @@ def modal_checkout(u, agora):
             with st.spinner("📡 ENVIANDO DADOS..."):
                 nome_img = f"checkout_{u['Nome']}_{agora_real.strftime('%d-%m-%Y_%H-%M')}.jpg"
                 link_drive = salvar_foto_drive(foto_out, nome_img, st.secrets, st.session_state.get('error_log'))
+
                 if link_drive:
                     acao_texto = f"Check-out | Foto: {link_drive}"
                     feedback_texto = f"{clima} | Obs: {obs if obs else 'Nenhuma'}"
-                    registrar_acao(u['ID_Usuario'], acao_texto, localizacao=gps_out,
+                    registrar_acao(u['ID_Usuario'], acao_texto,
+                                   localizacao=gps_out,
                                    feedback=feedback_texto, secrets=st.secrets,
                                    error_log=st.session_state.get('error_log'))
                     try:
@@ -209,6 +215,7 @@ def modal_checkout(u, agora):
                             'traceback': traceback.format_exc(),
                             'tipo': type(e).__name__
                         })
+
                     st.success("✅ TUDO SALVO! BOM DESCANSO.")
                     time.sleep(2)
                     st.rerun()
@@ -221,12 +228,96 @@ if cargo_limpo == "supervisor":
     df_msgs = carregar_dados("Mensagens", st.secrets["planilha"]["id"], st.session_state.get('error_log'))
     df_usuarios = carregar_dados("Usuarios", st.secrets["planilha"]["id"], st.session_state.get('error_log'))
     df_logs = carregar_dados("Logs", st.secrets["planilha"]["id"], st.session_state.get('error_log'))
-    m = None
 
+    # --------------------------------------------------------------
+    #  ⚡ Leaderboard – carregar dados para o ranking do supervisor
+    # --------------------------------------------------------------
+    df_leaderboard = carregar_dados(
+        "Leaderboard",
+        st.secrets["planilha"]["id"],
+        st.session_state.get('error_log')
+    )
+
+    # Variáveis auxiliares (mesmas usadas no colaborador)
+    pontos_hoje = 0
+    total_pontos = 0
+    posicao_atual = None
+    acoes_progresso: List[Dict[str, Any]] = []
+    ranking: List[Dict[str, Any]] = []
+
+    if df_leaderboard is not None and not df_leaderboard.empty:
+        hoje_str = agora.strftime("%d/%m/%Y")
+        linhas_hoje = df_leaderboard[df_leaderboard['data_dia'] == hoje_str]
+
+        # --------------------------------------------------------------
+        # 1️⃣  Resumo das ações hoje (para o card de progresso - opcional)
+        # --------------------------------------------------------------
+        for acao, _ in PONTUACAO.items():
+            limite = LIMITE_DIARIO.get(acao)               # None → ilimitado
+            feitas = len(linhas_hoje[linhas_hoje['tipo_acao'] == acao])
+            # O resumo não é usado diretamente aqui, mas pode servir para debug
+
+        # --------------------------------------------------------------
+        # 2️⃣  Métricas do supervisor (pontos de hoje, total acumulado, etc.)
+        # --------------------------------------------------------------
+        df_user = df_leaderboard[df_leaderboard['id_usuario'] == u['ID_Usuario']]
+        if not df_user.empty:
+            pontos_hoje = int(df_user[df_user['data_dia'] == hoje_str]['pontos_ganhos'].astype(int).sum())
+            total_pontos = int(df_user.iloc[-1]['pontos_total'])
+
+        # --------------------------------------------------------------
+        # 3️⃣  Ranking geral (top 10) – usado no card “Leaderboard”
+        # --------------------------------------------------------------
+        df_ultimas = df_leaderboard.sort_values('ultima_atualizacao').drop_duplicates('id_usuario', keep='last')
+        df_ordenado = df_ultimas.sort_values('pontos_total', ascending=False).reset_index(drop=True)
+        df_ordenado['posicao'] = df_ordenado.index + 1
+
+        # garante que a coluna de ganhos seja numérica
+        df_ordenado['pontos_ganhos'] = (
+            pd.to_numeric(df_ordenado['pontos_ganhos'], errors='coerce')
+            .fillna(0)
+            .astype(int)
+        )
+        ranking = df_ordenado[['posicao', 'nome', 'pontos_total', 'pontos_ganhos']].rename(
+            columns={'nome': 'nome',
+                     'pontos_total': 'pontos',
+                     'pontos_ganhos': 'ganho'}
+        ).to_dict('records')
+
+        # posição atual do supervisor (se houver)
+        linha_user = df_ordenado[df_ordenado['id_usuario'] == u['ID_Usuario']]
+        if not linha_user.empty:
+            posicao_atual = int(linha_user.iloc[0]['posicao'])
+
+        # --------------------------------------------------------------
+        # 4️⃣  Lista de progresso das minhas ações (para o componente)
+        # --------------------------------------------------------------
+        df_user_today = df_leaderboard[
+            (df_leaderboard['id_usuario'] == u['ID_Usuario']) &
+            (df_leaderboard['data_dia'] == hoje_str)
+        ]
+
+        for acao, pts_por_acao in PONTUACAO.items():
+            limite = LIMITE_DIARIO.get(acao)                 # None = sem limite
+            feitas = int(df_user_today[df_user_today['tipo_acao'] == acao].shape[0])
+            nome_elegante = ACTION_LABELS.get(acao, acao.replace('_', ' ').title())
+            acoes_progresso.append({
+                "nome"   : nome_elegante,
+                "feitas" : feitas,
+                "limite" : limite,
+                "pontos" : pts_por_acao
+            })
+
+    # ----------------------------------------------------------------------
+    # Mensagem do dia (variável de mensagem)
+    # ----------------------------------------------------------------------
+    m = None  # <-- mantido para compatibilidade com código abaixo
     if df_msgs is not None and not df_msgs.empty:
         msg_grupo = df_msgs[df_msgs['ID_Alvo'].astype(str).str.strip() == str(u['ID_Grupo']).strip()]
+
         if not msg_grupo.empty:
             m = msg_grupo.iloc[-1]
+
             if not st.session_state["mensagem_exibida"]:
                 render_info_banner(
                     titulo="Campanha Max Maciel 2026!<br><span style='color: var(--cor-secundaria);'>INFORMES DO DIA</span>",
