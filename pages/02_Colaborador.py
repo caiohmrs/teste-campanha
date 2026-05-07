@@ -543,38 +543,39 @@ if cargo_limpo == "colaborador":
                 st.info("Nenhum contrato pendente.")
 
     # ----------------------------------------------------------------------
-    # Aba Ranking – layout compacto e informativo
+    # Aba Ranking – **accordion (expander)** para melhor usabilidade
     # ----------------------------------------------------------------------
     with tab_ranking:
-        # -----------------------------------------------------------------
-        # 1️⃣  Caixa explicativa (novo card “info‑ranking”)
-        # -----------------------------------------------------------------
-        render_info_ranking(
-            titulo="⚙️ Como funciona o Ranking",
-            mensagem=(
-                "São contabilizadas apenas as ações que geram pontuação. "
-                "Cada ação tem um limite diário (veja ao lado). "
-                "Somente as ações aprovadas aumentam o total de pontos."
+        # -------------------------------------------------------------
+        # 1️⃣  Explicação do Ranking
+        # -------------------------------------------------------------
+        with st.expander("⚙️ Como funciona o Ranking", expanded=False):
+            render_info_ranking(
+                titulo="Como funciona o Ranking",
+                mensagem=(
+                    "São contabilizadas apenas as ações que geram pontuação. "
+                    "Cada ação tem um limite diário (veja ao lado). "
+                    "Somente as ações aprovadas aumentam o total de pontos."
+                )
             )
-        )
 
-        # Pequeno espaçamento após o card (para não colar no leaderboard)
-        st.markdown("<br>", unsafe_allow_html=True)
+        # -------------------------------------------------------------
+        # 2️⃣  Progresso das Ações do Usuário
+        # -------------------------------------------------------------
+        with st.expander("🚀 Progresso das minhas ações", expanded=False):
+            if acoes_progresso:
+                render_action_progress(acoes_progresso)
+            else:
+                st.info("Nenhuma ação realizada ainda.")
 
-        # -----------------------------------------------------------------
-        # 2️⃣  Leaderboard – ocupa a largura completa
-        # -----------------------------------------------------------------
-        if ranking:
-            render_leaderboard(ranking)
-            st.markdown("<br>", unsafe_allow_html=True)   # espaço visual entre blocos
-
-        # -----------------------------------------------------------------
-        # 3️⃣  Progresso por ação (novo componente)
-        # -----------------------------------------------------------------
-        if acoes_progresso:
-            render_action_progress(acoes_progresso)
-        else:
-            st.info("Nenhuma ação realizada ainda.")
+        # -------------------------------------------------------------
+        # 3️⃣  Leaderboard Geral
+        # -------------------------------------------------------------
+        with st.expander("🏆 Leaderboard – Ranking Global", expanded=False):
+            if ranking:
+                render_leaderboard(ranking)
+            else:
+                st.info("Ainda não há dados de pontuação para exibir.")
 
     st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
     st.divider()
