@@ -521,37 +521,6 @@ if cargo_limpo == "colaborador":
             )
         )
 
-        # -----------------------------------------------------------------
-        # 2️⃣ Progresso da meta diária + Resumo das ações de hoje
-        # -----------------------------------------------------------------
-        col_progresso, col_acoes = st.columns([1.2, 1.8])
-
-        # ---- PROGRESSO DA META DIÁRIA ------------------------------------
-        with col_progresso:
-            render_progress_bar(
-                percentual=min(
-                    100,
-                    (pontos_hoje / meta_diaria) * 100 if meta_diaria else 0
-                ),
-                label="Meta diária – Pontos"
-            )
-
-        # ---- LISTA DE AÇÕES FEITAS / LIMITE -----------------------------
-        with col_acoes:
-            with st.container():
-                if resumo_acoes:
-                    render_metric_row(resumo_acoes)
-                else:
-                    st.info("Nenhuma ação registrada ainda.")
-
-        # -----------------------------------------------------------------
-        # 3️⃣ Resumo geral (pontos totais, posição, ações hoje)
-        # -----------------------------------------------------------------
-        render_metric_row([
-            {"label": "PONTOS TOTAL", "value": total_pontos},
-            {"label": "POSIÇÃO", "value": posicao_atual or "-", "secondary": True},
-            {"label": "AÇÕES HOJE", "value": qtd_acoes_hoje}
-        ])
 
         # -----------------------------------------------------------------
         # 4️⃣ Leaderboard – ocupa a largura completa
