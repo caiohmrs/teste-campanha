@@ -571,11 +571,12 @@ if cargo_limpo == "colaborador":
         # -------------------------------------------------------------
         # 3️⃣  Leaderboard Geral
         # -------------------------------------------------------------
-        with st.expander("🏆 Leaderboard – Ranking Global", expanded=False):
-            if ranking:
-                render_leaderboard(ranking)
-            else:
-                st.info("Ainda não há dados de pontuação para exibir.")
+        # **Leaderboard – agora exibido fora de qualquer expander**
+        st.subheader("🏆 Leaderboard – Ranking Global")
+        if ranking:
+            render_leaderboard(ranking)
+        else:
+            st.info("Ainda não há dados de pontuação para exibir.")
 
     st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
     st.divider()
