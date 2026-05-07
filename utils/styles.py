@@ -302,8 +302,6 @@ def get_css():
             border: 4px solid var(--cor-texto);
             box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
             text-align: center;
-            width: 90%;
-            margin: 10px auto 25px auto;
         }}
 
         .welcome-banner-title {{
@@ -386,7 +384,7 @@ def get_css():
             color: var(--cor-texto);
         }}
 
-        /* 18. INFO BANNER (MENSAGEM DO DIA) */
+        /* 18. INFO BANNER */
         .info-banner {{
             background-color: var(--cor-primaria);
             padding: 40px 20px;
@@ -451,7 +449,7 @@ def get_css():
             100% {{ transform: translateX(-50%); }}
         }}
 
-        /* 20. TEAM CARD (SUPERVISOR/ADMIN) */
+        /* 20. TEAM CARD */
         .team-card {{
             background-color: var(--cor-branco);
             border: 4px solid var(--cor-texto);
@@ -540,7 +538,7 @@ def get_css():
             color: var(--cor-secundaria);
         }}
 
-        /* 22. SUPPORT PANEL (SUPORTE) */
+        /* 22. SUPPORT PANEL */
         .support-panel {{
             background-color: var(--cor-secundaria);
             padding: 20px;
@@ -704,11 +702,7 @@ def get_css():
             color: var(--cor-secundaria);
         }}
 
-        /* ----------------------------------------------------------------------
-           28. COMPONENTES DE GAMIFICAÇÃO (LEADERBOARD, BADGES, BARRA DE PROGRESSO)
-           ---------------------------------------------------------------------- */
-
-        /* Card que contém a tabela de pontuação */
+        /* 28. LEADERBOARD CARD */
         .leaderboard-card {{
             background-color: var(--cor-branco);
             border: 4px solid var(--cor-texto);
@@ -717,7 +711,6 @@ def get_css():
             margin-bottom: 25px;
         }}
 
-        /* Cabeçalho do card de leaderboard */
         .leaderboard-header {{
             background-color: var(--cor-primaria);
             border-bottom: 3px solid var(--cor-texto);
@@ -729,7 +722,6 @@ def get_css():
             text-transform: uppercase;
         }}
 
-        /* Linha individual da tabela (nome + pontuação) */
         .leaderboard-row {{
             display: flex;
             justify-content: space-between;
@@ -740,7 +732,6 @@ def get_css():
             color: var(--cor-texto);
         }}
 
-        /* Badge que destaca a posição (1°, 2°, 3°, …) */
         .position-badge {{
             background-color: var(--cor-secundaria);
             color: var(--cor-branco);
@@ -752,7 +743,6 @@ def get_css():
             text-transform: uppercase;
         }}
 
-        /* Badge de pontos (ex.: “+10 pts”) */
         .points-badge {{
             background-color: var(--cor-primaria);
             color: var(--cor-texto);
@@ -763,7 +753,35 @@ def get_css():
             font-size: 0.85rem;
         }}
 
-        /* Barra de progresso para metas diárias */
+        /* 29. ACTION PROGRESS CARD (GAMIFICAÇÃO) */
+        .action-progress-card {{
+            background-color: var(--cor-primaria);
+            border: 4px solid var(--cor-texto);
+            border-radius: var(--border-radius);
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
+        }}
+
+        .action-progress-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }}
+
+        .action-progress-label {{
+            font-family: var(--fonte-titulo);
+            color: var(--cor-texto);
+        }}
+
+        .action-progress-value {{
+            font-family: var(--fonte-titulo);
+            font-weight: bold;
+            color: var(--cor-secundaria);
+        }}
+
+        /* 30. PROGRESS BAR (reutilizo estilos já existentes) */
         .progress-bar {{
             width: 100%;
             background-color: var(--cor-fundo);

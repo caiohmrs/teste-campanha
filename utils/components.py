@@ -30,11 +30,11 @@ def render_login_box():
 
 
 def render_welcome_banner(nome_usuario):
-    """Renderiza o banner de boas-vindas do usuário."""
+    """Renderiza o banner de boas‑vindas do usuário."""
     nome_primeiro = nome_usuario.split()[0].upper()
     st.markdown(f"""
         <div class="welcome-banner">
-            <h3 class="welcome-banner-title">BEM-VINDO,</h3>
+            <h3 class="welcome-banner-title">BEM‑VINDO,</h3>
             <h1 class="welcome-banner-name">{nome_primeiro}</h1>
         </div>
     """, unsafe_allow_html=True)
@@ -238,24 +238,14 @@ def render_points_badge(pontos) -> str:
     uma *string* vazia (nenhum badge será exibido) – evitando o
     ``TypeError`` que ocorria ao comparar string com int.
     """
-    # --------------------------------------------------------------
-    # Tenta converter para inteiro (aceita "10", 10.0, "10.5" etc.)
-    # --------------------------------------------------------------
     try:
         pts = int(float(pontos))
     except (TypeError, ValueError):
-        # Valor não numérico → não exibe badge
         return ""
 
-    # --------------------------------------------------------------
-    # Opcional: não mostrar badge se for zero (pode remover se quiser)
-    # --------------------------------------------------------------
     if pts == 0:
         return ""
 
-    # --------------------------------------------------------------
-    # Monta o HTML do badge com sinal + ou -
-    # --------------------------------------------------------------
     sinal = "+" if pts >= 0 else "-"
     return f'<span class="points-badge">{sinal}{abs(pts)} pts</span>'
 
@@ -265,13 +255,10 @@ def render_progress_bar(percentual: float, label: str | None = None) -> None:
     Exibe uma barra de progresso estilizada.
 
     Args:
-        percentual: Valor entre 0 e 100 (qualquer número será automaticamente
-                    truncado ao intervalo permitido).
+        percentual: Valor entre 0 e 100 (qualquer número será truncado ao intervalo permitido).
         label: Texto opcional que aparecerá acima da barra.
     """
-    # Garantir limites válidos
     pct = max(0, min(100, percentual))
-    # HTML da barra (classe `.progress-bar` + interior `.progress-bar-fill`)
     barra_html = f'''
         <div class="progress-bar">
             <div class="progress-bar-fill" style="width:{pct}%"></div>
@@ -280,6 +267,49 @@ def render_progress_bar(percentual: float, label: str | None = None) -> None:
     if label:
         barra_html = f'<div style="font-weight:bold;margin-bottom:4px;">{label}</div>' + barra_html
     st.markdown(barra_html, unsafe_allow_html=True)
+
+
+def render_action_progress(actions: List[Dict[str, Any]]) -> None:
+    """
+    Renderiza cartões de progresso de ações gamificadas.
+
+    Cada dicionário da lista deve conter:
+        - ``label`` (str): nome da ação
+        - ``progresso`` (int ou float): quantidade já efetuada hoje
+        - ``limite`` (int ou None): limite diário (``None`` = ilimitado)
+        - ``pontos`` (int ou None, opcional): pontos ganhos nessa ação (exibe badge)
+
+    Exemplo:
+        actions = [
+            {"label": "Check‑in", "progresso": 1, "limite": 1, "pontos": 10},
+            {"label": "Post Instagram", "progresso": 3, "limite": 5, "pontos": 2},
+        ]
+    """
+    for a in actions:
+        label = a.get("label", "")
+        progresso = a.get("progresso", 0)
+        limite = a.get("limite")
+        pontos = a.get("pontos")
+
+        # Texto de progresso
+        if limite is None:
+            progresso_txt = f"{int(progresso)} / ∞"
+            pct = 0  # barra oculta quando ilimitado
+        else:
+            progresso_txt = f"{int(progresso)} / {int(limite)}"
+            pct = (float(progresso) / float(limite)) * 100 if limite else 0
+
+        badge_pts = render_points_badge(pontos) if pontos is not None else ""
+
+        st.markdown(f'''
+            <div class="action-progress-card">
+                <div class="action-progress-row">
+                    <span class="action-progress-label">{label}</span>
+                    <span class="action-progress-value">{progresso_txt} {badge_pts}</span>
+                </div>
+                {'<div class="progress-bar"><div class="progress-bar-fill" style="width:' + str(pct) + '%"></div></div>' if limite else ''}
+            </div>
+        ''', unsafe_allow_html=True)
 
 
 def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
@@ -304,7 +334,6 @@ def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
     if not ranking:
         st.info("Nenhum dado de ranking disponível.")
         return
-
 
     # Header do card
     st.space("small")
