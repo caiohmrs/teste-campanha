@@ -57,8 +57,11 @@ from utils.components import (
     render_action_link_button,
     render_metric_row,
     render_progress_bar,
-    render_leaderboard,          # <-- novo import
+    render_leaderboard,          # <-- já importado
+    render_position_badge,
+    render_points_badge
 )
+from utils.gamification import PONTUACAO, LIMITE_DIARIO   # ← novo
 
 # CONFIGURAÇÃO INICIAL
 st.set_page_config(
@@ -261,6 +264,32 @@ if cargo_limpo == "colaborador":
         st.secrets["planilha"]["id"],
         st.session_state.get('error_log')
     )
+    # --------------------------------------------------------------
+    # Resumo das ações realizadas hoje (para exibir na aba Ranking)
+    # --------------------------------------------------------------
+    # Formato esperado de `df_leaderboard`:
+    #   colunas: id_usuario, nome, cargo, pontos_total, ultima_atualizacao,
+    #            pontos_dia, data_dia, tipo_acao, pontos_ganhos
+    resumo_acoes = []
+    if df_leaderboard is not None and not df_leaderboard.empty:
+        hoje_str = agora.strftime("%d/%m/%Y")
+        linhas_hoje = df_leaderboard[df_leaderboard['data_dia'] == hoje_str]
+
+        for acao, _ in PONTUACAO.items():
+            limit = LIMITE_DIARIO.get(acao)               # None → ilimitado
+            feitas = len(linhas_hoje[linhas_hoje['tipo_acao'] == acao])
+
+            if limit is None:
+                descricao = f"{feitas} / ∞"
+            else:
+                descricao = f"{feitas} / {limit}"
+
+            resumo_acoes.append({
+                "label": acao.replace('_', ' ').title(),
+                "value": descricao,
+                "secondary": False
+            })
+
     m = None
 
     # ----------------------------------------------------------------------
@@ -482,43 +511,56 @@ if cargo_limpo == "colaborador":
                 st.info("Nenhum contrato pendente.")
 
     # ----------------------------------------------------------------------
-    # Aba Ranking – layout compacto
+    # Aba Ranking – layout compacto e informativo
     # ----------------------------------------------------------------------
     with tab_ranking:
-        # 1️⃣ Cabeçalho da seção (grande, não colocado em coluna)
-        render_section_header("🏆 RANKING GLOBAL")
-
-        # 2️⃣ Área de resumo rápido – duas colunas
-        col_resumo, col_barra = st.columns([2, 1])
-        with col_resumo:
-            # Status (ações hoje) – componente pequeno
-            render_status_bar(qtd_acoes_hoje, qtd_acoes_hoje > 0)
-            # Informativo opcional sobre regras do ranking
-            render_info_banner(
-                titulo="Como funciona o ranking",
-                subtítulo="",
-                mensagem=(
-                    "São contabilizadas apenas as ações que geram pontuação. "
-                    "Limite diário por ação → veja detalhes na aba Missões."
-                )
+        # -----------------------------------------------------------------
+        # 1️⃣  Caixa explicativa – alinhada horizontalmente (mesmo “full-width”
+        #     das tabs) usando a mesma classe de banner.
+        # -----------------------------------------------------------------
+        render_info_banner(
+            titulo="⚙️ Como funciona o Ranking",
+            subtítulo="",
+            mensagem=(
+                "São contabilizadas apenas as ações que geram pontuação. "
+                "Cada ação tem um limite diário (veja ao lado). "
+                "Somente as ações aprovadas aumentam o total de pontos."
             )
-            # Métricas resumidas (pontos total, posição, ações hoje)
-            render_metric_row([
-                {"label": "PONTOS TOTAL", "value": total_pontos},
-                {"label": "POSIÇÃO", "value": posicao_atual or "-", "secondary": True},
-                {"label": "AÇÕES HOJE", "value": qtd_acoes_hoje}
-            ])
+        )
 
-        with col_barra:
-            # Barra de progresso da meta diária – elemento pequeno
+        # -----------------------------------------------------------------
+        # 2️⃣  Progresso da meta diária + Resumo das ações de hoje
+        # -----------------------------------------------------------------
+        col_progresso, col_acoes = st.columns([1.2, 1.8])
+
+        with col_progresso:
+            # Barra de progresso da meta diária (pontos ganhos hoje)
             render_progress_bar(
-                percentual=min(100, (pontos_hoje / meta_diaria) * 100 if meta_diaria else 0),
-                label="Progresso da meta diária"
+                percentual=min(
+                    100,
+                    (pontos_hoje / meta_diaria) * 100 if meta_diaria else 0
+                ),
+                label="Meta diária – Pontos"
             )
 
-        # 3️⃣ Leaderboard – ocupa a largura completa (não em colunas)
+        with col_acoes:
+            # Lista de cada ação + quantas já foram feitas / limite
+            render_metric_row(resumo_acoes)
+
+        # -----------------------------------------------------------------
+        # 3️⃣  Resumo geral (pontos totais, posição, ações hoje)
+        # -----------------------------------------------------------------
+        render_metric_row([
+            {"label": "PONTOS TOTAL", "value": total_pontos},
+            {"label": "POSIÇÃO", "value": posicao_atual or "-", "secondary": True},
+            {"label": "AÇÕES HOJE", "value": qtd_acoes_hoje}
+        ])
+
+        # -----------------------------------------------------------------
+        # 4️⃣  Leaderboard – ocupa a largura completa
+        # -----------------------------------------------------------------
         if ranking:
-            render_leaderboard(ranking)   # já inclui badges de posição
+            render_leaderboard(ranking)
         else:
             st.info("Ainda não há dados de pontuação para exibir.")
 
