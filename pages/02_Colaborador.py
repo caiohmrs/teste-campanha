@@ -60,7 +60,8 @@ from utils.components import (
     render_progress_bar,
     render_leaderboard,
     render_position_badge,
-    render_points_badge
+    render_points_badge,
+    render_action_progress          # ← novo import
 )
 from utils.gamification import PONTUACAO, LIMITE_DIARIO   # ← novo
 
@@ -278,6 +279,7 @@ if cargo_limpo == "colaborador":
     posicao_atual = None
     qtd_acoes_hoje = 0
     ranking = []
+    acoes_progresso: List[Dict[str, Any]] = []   # ← lista para o novo componente
 
     if df_leaderboard is not None and not df_leaderboard.empty:
         # Preparar filtros de data
@@ -341,6 +343,25 @@ if cargo_limpo == "colaborador":
         linha_user = df_ordenado[df_ordenado['id_usuario'] == u['ID_Usuario']]
         if not linha_user.empty:
             posicao_atual = int(linha_user.iloc[0]['posicao'])
+
+        # --------------------------------------------------------------
+        # 5️⃣  Montar lista de ações para o novo componente
+        # --------------------------------------------------------------
+        # Cada dicionário deve conter:
+        #   - nome   : nome legível da ação
+        #   - feitas : quantas vezes foi feita hoje
+        #   - limite : limite diário (None → ilimitado)
+        #   - pontos : quantos pontos vale cada ocorrência
+        acoes_progresso = []
+        for acao, pts_por_acao in PONTUACAO.items():
+            limite = LIMITE_DIARIO.get(acao)                 # None = sem limite
+            feitas = int(linhas_hoje[linhas_hoje['tipo_acao'] == acao].shape[0])
+            acoes_progresso.append({
+                "nome"   : acao.replace('_', ' ').title(),
+                "feitas" : feitas,
+                "limite" : limite,
+                "pontos" : pts_por_acao
+            })
 
     # ----------------------------------------------------------------------
     # Mensagem do dia (variável de mensagem)
@@ -521,12 +542,19 @@ if cargo_limpo == "colaborador":
             )
         )
 
-
         # -----------------------------------------------------------------
         # 4️⃣ Leaderboard – ocupa a largura completa
         # -----------------------------------------------------------------
         if ranking:
             render_leaderboard(ranking)
+            st.markdown("<br>", unsafe_allow_html=True)   # espaço visual
+            # ---------------------------------------------------------
+            # 5️⃣  Mostrar progresso por ação (novo componente)
+            # ---------------------------------------------------------
+            if acoes_progresso:
+                render_action_progress(acoes_progresso)
+            else:
+                st.info("Nenhuma ação realizada ainda.")
         else:
             st.info("Ainda não há dados de pontuação para exibir.")
 
