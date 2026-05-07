@@ -3,30 +3,30 @@
 
 # Pontuação por tipo de ação
 PONTUACAO = {
-    "checkin": 10,
+    "checkin": 5,
     "checkout": 5,
-    "missao": 20,
+    "missao": 10,
     "insta_engage": 2,
-    "whatsapp": 1,
-    "talk_team": 3,
+    "whatsapp": 10,
+
 }
 
 # Limite diário por tipo de ação (None → ilimitado)
 LIMITE_DIARIO = {
-    "checkin": None,
-    "checkout": None,
-    "missao": 3,
-    "insta_engage": 5,
-    "whatsapp": 5,
-    "talk_team": 5,
+    "checkin": 1,
+    "checkout": 1,
+    "missao": 1,
+    "insta_engage": 3,
+    "whatsapp": 1,
+
 }
 
 # Mapeamento de nomes brutos → nomes elegantes (usado na UI)
 ACTION_LABELS = {
-    "checkin":      "Check‑in",
-    "checkout":     "Check‑out",
-    "missao":       "Missão",
-    "insta_engage":"Engajamento Instagram",
-    "whatsapp":     "WhatsApp",
-    "talk_team":    "Talk‑Team",
+    "checkin":      "Realizar Check‑in Diário",
+    "checkout":     "Realizar Check‑out Diário",
+    "missao":       "Concluir a Missão do Dia",
+    "insta_engage":"Curtir, Comentar e Compartilhar no Instagram",
+    "whatsapp":     "Chamar um novo amigo para a campanha pelo WhatsApp",
+
 }

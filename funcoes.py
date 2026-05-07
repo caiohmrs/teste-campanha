@@ -276,7 +276,7 @@ def registrar_acao(id_usuario, tipo_acao, localizacao, feedback, secrets, error_
         elif "ação:" in a and "instagram" in a:
             acao_normalizada = "insta_engage"
         elif "ação:" in a and "whatsapp" in a:
-            acao_normalizada = "friend_ref"
+            acao_normalizada = "whatsapp"
         elif "talk_team" in a:
             acao_normalizada = "talk_team"
 

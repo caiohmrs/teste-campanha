@@ -359,7 +359,7 @@ def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
 
     # Header do card
     st.space("small")
-    st.markdown('<div class="leaderboard-header">Leaderboard – Pontuação</div>', unsafe_allow_html=True)
+    st.markdown('<div class="leaderboard-header">Classificação e Pontuação</div>', unsafe_allow_html=True)
 
     # Linhas individuais
     for linha in ranking:
@@ -396,6 +396,7 @@ def render_info_ranking(titulo: str, mensagem: str) -> None:
         titulo:   Título que aparecerá em ``<h2>`` (ex.: "⚙️ Como funciona o ranking").
         mensagem: Texto já formatado em HTML/Markdown (pode conter ``<ul>``, ``<li>``, etc.).
     """
+
     st.markdown(f'''
         <div class="info-ranking-card">
             <h2>{titulo}</h2>
