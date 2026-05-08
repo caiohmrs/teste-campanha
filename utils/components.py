@@ -485,15 +485,55 @@ def render_material_summary(id_usuario: str, secrets) -> None:
     }
 
     # --------------------------------------------------------------
-    # 4️⃣ Data editor (Streamlit >= 1.31) – devolve DataFrame editado
+    # 4️⃣ Data‑editor (tenta usar a API nativa do Streamlit)
     # --------------------------------------------------------------
-    edited_df = st.experimental_data_editor(
-        df_raw,
-        column_config=col_config,
-        use_container_width=True,
-        num_rows="dynamic",
-        key=f"material_editor_{id_usuario}"
-    )
+    # Streamlit ≥ 1.22 tem ``st.experimental_data_editor`` (beta).
+    # Streamlit ≥ 1.28 tem ``st.data_editor`` (estável).
+    # Se a versão instalada não possui nenhuma delas, usamos
+    # um fallback manual (um formulário linha‑a‑linha).
+    # --------------------------------------------------------------
+    if hasattr(st, "data_editor"):                     # API estável
+        edited_df = st.data_editor(
+            df_raw,
+            column_config=col_config,
+            use_container_width=True,
+            num_rows="dynamic",
+            key=f"material_editor_{id_usuario}"
+        )
+    elif hasattr(st, "experimental_data_editor"):       # API experimental
+        edited_df = st.experimental_data_editor(
+            df_raw,
+            column_config=col_config,
+            use_container_width=True,
+            num_rows="dynamic",
+            key=f"material_editor_{id_usuario}"
+        )
+    else:                                               # Fallback manual
+        st.info(
+            "Seu Streamlit não possui ``st.data_editor`` nem "
+            "``st.experimental_data_editor``.  Será usado um editor "
+            "simplificado linha‑a‑linha."
+        )
+        edited_rows = []
+        for idx, row in df_raw.iterrows():
+            with st.container(border=True):
+                st.markdown(f"**Tipo:** {row['tipo_material']}")
+                total = st.number_input(
+                    "Total", min_value=0, step=1,
+                    value=int(row["quantidade_total"]),
+                    key=f"total_{id_usuario}_{idx}"
+                )
+                resto = st.number_input(
+                    "Restante", min_value=0, step=1,
+                    value=int(row["quantidade_restante"]),
+                    key=f"rest_{id_usuario}_{idx}"
+                )
+                edited_rows.append({
+                    "tipo_material": row["tipo_material"],
+                    "quantidade_total": total,
+                    "quantidade_restante": resto
+                })
+        edited_df = pd.DataFrame(edited_rows)
 
     # --------------------------------------------------------------
     # 5️⃣ Botão de persistência
