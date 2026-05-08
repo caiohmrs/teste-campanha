@@ -486,24 +486,30 @@ if cargo_limpo == "supervisor":
                 "Kits"
             ]
 
-            st.subheader("📦 Controle de Materiais da Equipe")
-            render_material_form(st.secrets)          # <-- CHAMADA ATUALIZADA
-            st.markdown("---")
-            # ------------------------------------------------------
-            #  RESUMO DOS MATERIAIS JÁ REGISTRADOS (por grupo)
-            # ------------------------------------------------------
-            # O supervisor pertence a um grupo identificado por `ID_Grupo`.
-            # Passamos esse ID ao componente; ele reutiliza a mesma lógica
-            # de `obter_resumo_materiais` (filtra pela coluna `id_usuario` da aba
-            # “Materiais”).  Assim o supervisor vê, de forma consolidada,
-            # o total entregue e o restante de cada tipo de material que já
-            # foi cadastrado para o seu grupo.
-            grupo_id = str(u.get("ID_Grupo", "")).strip()
-            if grupo_id:
-                render_material_summary(id_usuario=grupo_id, secrets=st.secrets)
-            else:
-                st.info("ID do grupo não encontrado – não há resumo para exibir.")
-            # --------------------------------
+            # --------------------------------------------------------------
+            #  CONTROLE DE MATERIAIS + RESUMO (agora dentro de um **expander**)
+            # --------------------------------------------------------------
+            with st.expander("📦 Controle de Materiais e Nível de Estoque", expanded=True):
+                st.subheader("📦 Controle de Materiais da Equipe")
+                # Formulário para **adição** de material
+                render_material_form(st.secrets)          # <-- CHAMADA ATUALIZADA
+
+                st.markdown("---")
+
+                # ------------------------------------------------------
+                #  Resumo dos materiais já registrados (por grupo)
+                # ------------------------------------------------------
+                # O supervisor pertence a um grupo identificado por `ID_Grupo`.
+                # Passamos esse ID ao componente; ele reutiliza a mesma lógica
+                # de `obter_resumo_materiais` (filtra pela coluna `id_usuario`
+                # da aba “Materiais”). Assim o supervisor vê, de forma
+                # consolidada, o total entregue e o restante de cada tipo de
+                # material que já foi cadastrado para o seu grupo.
+                grupo_id = str(u.get("ID_Grupo", "")).strip()
+                if grupo_id:
+                    render_material_summary(id_usuario=grupo_id, secrets=st.secrets)
+                else:
+                    st.info("ID do grupo não encontrado – não há resumo para exibir.")
 
             espaco_metricas = st.empty()
             c_data, _ = st.columns([1.5, 1])
