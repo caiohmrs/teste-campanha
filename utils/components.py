@@ -405,8 +405,8 @@ def render_material_form(secrets) -> None:
         • tipo do material (texto livre)
         • quantidade total recebida
         • quantidade já utilizada (ou seja, que já saiu do estoque)
-    O componente captura automaticamente o ``ID_Grupo`` do supervisor que está
-    logado e o envia para ``fn.registrar_material_supervisor`` (campo
+    O componente captura automaticamente o ``ID_Grupo`` do supervisor
+    que está logado e o envia para ``fn.registrar_material_supervisor`` (campo
     ``id_grupo`` da função backend).  O ``qnt_total`` e o ``qnt_usada``
     são gravados nas colunas “quantidade_total” e “quantidade_restante”.
     """
@@ -474,51 +474,42 @@ def render_material_summary(id_usuario: str, secrets) -> None:
     # 2️⃣ Definir opções de nível
     niveis = ["Pouco", "Médio", "Muito"]
 
-    # 3️⃣ Interface linha‑a‑linha
-    edited_rows = []
+    # 3️⃣ Interface linha‑a‑linha **com botão individual**
     for idx, row in df_raw.iterrows():
         with st.container(border=True):
             st.markdown(f"**Tipo:** {row['tipo_material']}")
+
             nivel_atual = row.get("nivel_material", "Médio")
             if nivel_atual not in niveis:
                 nivel_atual = "Médio"
-            nivel = st.selectbox(
+
+            # selectbox (valor guardado em session_state)
+            select_key = f"nivel_{id_usuario}_{idx}"
+            nivel_escolhido = st.selectbox(
                 "Nível de estoque",
                 niveis,
                 index=niveis.index(nivel_atual),
-                key=f"nivel_{id_usuario}_{idx}"
+                key=select_key
             )
-            edited_rows.append({
-                "tipo_material": row["tipo_material"],
-                "nivel_material": nivel
-            })
 
-    edited_df = pd.DataFrame(edited_rows)
+            # botão “Salvar nível” para **este** material
+            if st.button(
+                "💾 Salvar nível",
+                key=f"save_nivel_{id_usuario}_{idx}",
+                help=f"Salvar nível de estoque para {row['tipo_material']}"
+            ):
+                ok = fn.atualizar_nivel_material_grupo(
+                    id_usuario=str(id_usuario),
+                    tipo_material=str(row["tipo_material"]).strip(),
+                    nivel=nivel_escolhido,
+                    _secrets=secrets,
+                    error_log=st.session_state.get("error_log")
+                )
+                if ok:
+                    st.success(f"Nível de **{row['tipo_material']}** atualizado para **{nivel_escolhido}**.")
+                else:
+                    st.error(f"Falha ao atualizar nível de **{row['tipo_material']}**.")
 
-    # 4️⃣ Botão de persistência
-    if st.button("💾 Salvar nível", key=f"save_nivel_{id_usuario}"):
-        sucessos = 0
-        falhas = 0
-        for idx, row in edited_df.iterrows():
-            tipo = str(row["tipo_material"]).strip()
-            nivel_novo = row["nivel_material"]
-            ok = fn.atualizar_nivel_material_grupo(
-                id_usuario=str(id_usuario),
-                tipo_material=tipo,
-                nivel=nivel_novo,
-                _secrets=secrets,
-                error_log=st.session_state.get("error_log")
-            )
-            if ok:
-                sucessos += 1
-            else:
-                falhas += 1
-
-        if sucessos:
-            st.success(f"{sucessos} nível(is) atualizado(s) com sucesso.")
-        if falhas:
-            st.error(f"{falhas} atualização(ões) falhou(aram) – verifique o log.")
-
-    # 5️⃣ Separador visual
+    # 4️⃣ Separador visual (mantém a estética)
     st.markdown("---")
-    st.markdown("**📋 Níveis de estoque** (selecionar e salvar)")
+    st.markdown("**📋 Níveis de estoque** (selecionar e salvar individualmente)")
