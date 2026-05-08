@@ -926,7 +926,7 @@ def atualizar_pontuacao_usuario(
             r for r in linhas_usuario
             if r.get('data_dia') == hoje_str and r.get('tipo_acao') == acao
         ]
-        limite = LIMITE_DIARIO.get(acao, None)          # None → sem limite
+        limite = LIMITE_DIARIO.get(acao)          # None → sem limite
         limite_atingido = (limite is not None and len(acoes_hoje) >= limite)
 
         # ---------------------------------------------------------
@@ -1068,7 +1068,7 @@ def registrar_material_supervisor(
         else:
             restante_anterior = 0
 
-        # 5️⃣ nova quantidade restante – calculamos a partir do total e da usada
+        # 5️⃣ nova quantidade restante – calculamos a partir do total e da usada
         try:
             total = int(qnt_total)
             usada = int(qnt_usada)
@@ -1164,18 +1164,12 @@ def obter_resumo_materiais(id_usuario: str, _secrets):
 
 
 # -------------------------------------------------------------------------
-# 2️⃣ FUNÇÃO PARA OBTER OS REGISTROS “BRUTOS” DE UM GRUPO
+# 2️⃣ FUNÇÃO DE OBTER OS REGISTROS “BRUTOS” DE UM GRUPO
 # -------------------------------------------------------------------------
 def obter_materiais_por_grupo(id_usuario: str, _secrets):
     """
-    Retorna um DataFrame **não agregado** contendo, para o ``id_usuario`` (grupo),
-    as colunas:
-        - ``tipo_material``
-        - ``quantidade_total``  (coluna “quantidade_total” ou, se ainda não existir, a antiga “quantidade_recebida”)
-        - ``quantidade_restante``
-    
-    Essa função é usada pelo componente de edição, pois permite que o supervisor
-    veja o estoque atual e altere os valores.
+    Retorna **DataFrame** de materiais para o usuário/grupo indicado.
+    Cada linha representa um tipo de material já registrado.
     """
     try:
         client = _get_gspread_client(_secrets)
@@ -1186,22 +1180,30 @@ def obter_materiais_por_grupo(id_usuario: str, _secrets):
             return pd.DataFrame()
 
         filtro = df['id_usuario'].astype(str) == str(id_usuario).strip()
-        df_grp = df[filtro][['tipo_material',
-                             'quantidade_total' if 'quantidade_total' in df.columns else 'quantidade_recebida',
-                             'quantidade_restante']].copy()
 
-        # Renomeia para garantir nomes consistentes para o frontend
-        col_qtd = 'quantidade_total' if 'quantidade_total' in df_grp.columns else 'quantidade_recebida'
+        # Seleciona colunas obrigatórias
+        col_qtd = 'quantidade_total' if 'quantidade_total' in df.columns else 'quantidade_recebida'
+        col_nivel = 'nivel_material' if 'nivel_material' in df.columns else None
+
+        cols = ['tipo_material', col_qtd, 'quantidade_restante']
+        if col_nivel:
+            cols.append(col_nivel)
+
+        df_grp = df[filtro][cols].copy()
+
+        # Renomeia quantidade para total
         df_grp = df_grp.rename(columns={col_qtd: 'quantidade_total'})
+
+        # Garante coluna nivel_material com valor padrão “Médio”
+        if 'nivel_material' not in df_grp.columns:
+            df_grp['nivel_material'] = 'Médio'
+
         return df_grp.reset_index(drop=True)
     except Exception as e:
         print(f"Erro ao obter materiais por grupo: {e}")
         return pd.DataFrame()
 
 
-# -------------------------------------------------------------------------
-# 3️⃣ FUNÇÃO DE ATUALIZAÇÃO DE UMA LINHA DE MATERIAL
-# -------------------------------------------------------------------------
 def atualizar_material_grupo(
         id_usuario: str,
         tipo_material: str,
@@ -1210,9 +1212,8 @@ def atualizar_material_grupo(
         _secrets,
         error_log=None) -> bool:
     """
-    Busca a **última** linha da aba “Materiais” que corresponde ao
-    ``id_usuario`` + ``tipo_material`` e atualiza as colunas
-    ``quantidade_total`` e ``quantidade_restante`` com os novos valores.
+    Busca a **última** linha da aba “Materiais” que corresponde ao ``id_usuario`` + ``tipo_material``.
+    Atualiza as colunas ``quantidade_total`` e ``quantidade_restante`` com os novos valores.
     Se a coluna ``quantidade_total`` ainda não existir (planilha antiga),
     cria‑a ao atualizar.
     """
@@ -1223,42 +1224,35 @@ def atualizar_material_grupo(
 
         planilha = client.open_by_key(_secrets["planilha"]["id"])
         aba = planilha.worksheet("Materiais")
-
-        # 1️⃣ Obter cabeçalho e garantir que as colunas existam
+        # 1️⃣ Obter cabeçalho e garantir colunas
         cabecalho = aba.row_values(1)
 
-        # A coluna de quantidade total pode se chamar “quantidade_total”
-        # ou “quantidade_recebida” (versões antigas da planilha)
         if 'quantidade_total' not in cabecalho and 'quantidade_recebida' not in cabecalho:
-            # Cria a coluna “quantidade_total” se nenhuma das duas existir
             aba.update('A1', cabecalho + ['quantidade_total'])
             cabecalho.append('quantidade_total')
 
-        # Quantidade restante sempre deve existir
         if 'quantidade_restante' not in cabecalho:
             aba.update('A1', cabecalho + ['quantidade_restante'])
             cabecalho.append('quantidade_restante')
 
-        # Define índices (1‑based) para as colunas corretas
         if 'quantidade_total' in cabecalho:
             col_total = cabecalho.index('quantidade_total') + 1
         else:
             col_total = cabecalho.index('quantidade_recebida') + 1
         col_rest = cabecalho.index('quantidade_restante') + 1
 
-        # 2️⃣ Procurar a linha que corresponde ao usuário + tipo (última ocorrência)
+        # 2️⃣ Procurar a linha alvo
         linhas = aba.get_all_records()
         linha_alvo = None
-        for i, linha in enumerate(linhas, start=2):  # começa na linha 2 (abaixo do cabeçalho)
+        for i, linha in enumerate(linhas, start=2):
             if str(linha.get('id_usuario')).strip() == str(id_usuario).strip() and \
                str(linha.get('tipo_material')).strip().lower() == str(tipo_material).strip().lower():
-                linha_alvo = i  # guarda sempre a última encontrada
+                linha_alvo = i
 
         if linha_alvo is None:
-            # Não encontrou → nada a atualizar
             return False
 
-        # 3️⃣ Atualizar as duas colunas
+        # 3️⃣ Atualizar
         aba.update_cell(linha_alvo, col_total, int(novo_total))
         aba.update_cell(linha_alvo, col_rest, int(novo_restante))
         return True
@@ -1272,4 +1266,58 @@ def atualizar_material_grupo(
                 'tipo': type(e).__name__
             })
         print(f"Erro ao atualizar material: {e}")
+        return False
+
+
+# -------------------------------------------------------------------------
+# 4️⃣ FUNÇÃO DE ATUALIZAÇÃO DO NÍVEL DE ESTOQUE (NOVA)
+# -------------------------------------------------------------------------
+def atualizar_nivel_material_grupo(
+        id_usuario: str,
+        tipo_material: str,
+        nivel: str,
+        _secrets,
+        error_log=None) -> bool:
+    """
+    Atualiza a coluna ``nivel_material`` (Pouco / Médio / Muito) da
+    última linha que corresponde ao ``id_usuario`` + ``tipo_material``.
+    Cria a coluna na planilha caso ainda não exista.
+    """
+    try:
+        client = _get_gspread_client(_secrets, error_log)
+        if client is None:
+            return False
+
+        planilha = client.open_by_key(_secrets["planilha"]["id"])
+        aba = planilha.worksheet("Materiais")
+        # Garantir existência da coluna de nível
+        cabecalho = aba.row_values(1)
+        if 'nivel_material' not in cabecalho:
+            aba.update('A1', cabecalho + ['nivel_material'])
+            cabecalho.append('nivel_material')
+        col_nivel = cabecalho.index('nivel_material') + 1
+
+        # Encontrar a linha alvo (última ocorrência)
+        linhas = aba.get_all_records()
+        linha_alvo = None
+        for i, linha in enumerate(linhas, start=2):
+            if str(linha.get('id_usuario')).strip() == str(id_usuario).strip() and \
+               str(linha.get('tipo_material')).strip().lower() == str(tipo_material).strip().lower():
+                linha_alvo = i   # sempre a última encontrada
+
+        if linha_alvo is None:
+            return False
+
+        aba.update_cell(linha_alvo, col_nivel, nivel)
+        return True
+    except Exception as e:
+        if error_log is not None:
+            error_log.append({
+                'data': get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),
+                'erro': str(e),
+                'funcao': 'atualizar_nivel_material_grupo',
+                'traceback': traceback.format_exc(),
+                'tipo': type(e).__name__
+            })
+        print(f"Erro ao atualizar nível de material: {e}")
         return False

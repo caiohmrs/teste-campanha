@@ -455,122 +455,70 @@ def render_material_form(secrets) -> None:
 
 def render_material_summary(id_usuario: str, secrets) -> None:
     """
-    Exibe **tabela editável** de materiais para o usuário/grupo indicado.
-    O supervisor pode alterar ``quantidade_total`` e ``quantidade_restante``.
-    As alterações são salvas na aba “Materiais” ao clicar em “Salvar alterações”.
+    Exibe, para cada tipo de material já registrado no **grupo**, um
+    select‑box que permite ao supervisor indicar o nível de estoque:
+    * Pouco
+    * Médio
+    * Muito
+
+    Ao clicar em **“💾 Salvar nível”**, o valor escolhido é gravado
+    na coluna ``nivel_material`` da aba “Materiais”.
     """
-    # --------------------------------------------------------------
-    # 1️⃣ Carregar os registros “brutos” (uma linha por tipo)
-    # --------------------------------------------------------------
+    # 1️⃣ Carregar os registros “brutos” (uma linha por tipo)
     df_raw = fn.obter_materiais_por_grupo(id_usuario=id_usuario, _secrets=secrets)
 
     if df_raw.empty:
         st.info("Ainda não há registros de material para este grupo.")
         return
 
-    # --------------------------------------------------------------
-    # 2️⃣ Salvar cópia original em session_state (para comparar mudanças)
-    # --------------------------------------------------------------
-    state_key = f"_material_original_{id_usuario}"
-    if state_key not in st.session_state:
-        st.session_state[state_key] = df_raw.copy()
+    # 2️⃣ Definir opções de nível
+    niveis = ["Pouco", "Médio", "Muito"]
 
-    # --------------------------------------------------------------
-    # 3️⃣ Configurar colunas – somente “total” e “restante” são editáveis
-    # --------------------------------------------------------------
-    col_config = {
-        "tipo_material": st.column_config.TextColumn(disabled=True, label="Tipo"),
-        "quantidade_total": st.column_config.NumberColumn(min_value=0, step=1, label="Total"),
-        "quantidade_restante": st.column_config.NumberColumn(min_value=0, step=1, label="Restante")
-    }
+    # 3️⃣ Interface linha‑a‑linha
+    edited_rows = []
+    for idx, row in df_raw.iterrows():
+        with st.container(border=True):
+            st.markdown(f"**Tipo:** {row['tipo_material']}")
+            nivel_atual = row.get("nivel_material", "Médio")
+            if nivel_atual not in niveis:
+                nivel_atual = "Médio"
+            nivel = st.selectbox(
+                "Nível de estoque",
+                niveis,
+                index=niveis.index(nivel_atual),
+                key=f"nivel_{id_usuario}_{idx}"
+            )
+            edited_rows.append({
+                "tipo_material": row["tipo_material"],
+                "nivel_material": nivel
+            })
 
-    # --------------------------------------------------------------
-    # 4️⃣ Data‑editor (usa width='stretch' em vez de use_container_width)
-    # --------------------------------------------------------------
-    if hasattr(st, "data_editor"):                     # API estável
-        edited_df = st.data_editor(
-            df_raw,
-            column_config=col_config,
-            width='stretch',
-            num_rows="dynamic",
-            key=f"material_editor_{id_usuario}"
-        )
-    elif hasattr(st, "experimental_data_editor"):       # API experimental
-        edited_df = st.experimental_data_editor(
-            df_raw,
-            column_config=col_config,
-            width='stretch',
-            num_rows="dynamic",
-            key=f"material_editor_{id_usuario}"
-        )
-    else:                                               # Fallback manual
-        st.info(
-            "Seu Streamlit não possui ``st.data_editor`` nem "
-            "``st.experimental_data_editor``.  Será usado um editor "
-            "simplificado linha‑a‑linha."
-        )
-        edited_rows = []
-        for idx, row in df_raw.iterrows():
-            with st.container(border=True):
-                st.markdown(f"**Tipo:** {row['tipo_material']}")
-                total = st.number_input(
-                    "Total", min_value=0, step=1,
-                    value=int(row["quantidade_total"]),
-                    key=f"total_{id_usuario}_{idx}"
-                )
-                resto = st.number_input(
-                    "Restante", min_value=0, step=1,
-                    value=int(row["quantidade_restante"]),
-                    key=f"rest_{id_usuario}_{idx}"
-                )
-                edited_rows.append({
-                    "tipo_material": row["tipo_material"],
-                    "quantidade_total": total,
-                    "quantidade_restante": resto
-                })
-        edited_df = pd.DataFrame(edited_rows)
+    edited_df = pd.DataFrame(edited_rows)
 
-    # --------------------------------------------------------------
-    # 5️⃣ Botão de persistência
-    # --------------------------------------------------------------
-    if st.button("💾 Salvar alterações", key=f"save_mat_{id_usuario}"):
-        # Comparar linha‑a‑linha com o original
-        original_df = st.session_state[state_key]
+    # 4️⃣ Botão de persistência
+    if st.button("💾 Salvar nível", key=f"save_nivel_{id_usuario}"):
         sucessos = 0
         falhas = 0
-
         for idx, row in edited_df.iterrows():
             tipo = str(row["tipo_material"]).strip()
-            total_novo = int(row["quantidade_total"] or 0)
-            resto_novo = int(row["quantidade_restante"] or 0)
-
-            # Verifica se houve mudança
-            orig_total = original_df.iloc[idx].get("quantidade_total") or 0
-            orig_rest = original_df.iloc[idx].get("quantidade_restante") or 0
-            if (total_novo != int(orig_total)) or (resto_novo != int(orig_rest)):
-                ok = fn.atualizar_material_grupo(
-                    id_usuario=str(id_usuario),
-                    tipo_material=tipo,
-                    novo_total=total_novo,
-                    novo_restante=resto_novo,
-                    _secrets=secrets,
-                    error_log=st.session_state.get("error_log")
-                )
-                if ok:
-                    sucessos += 1
-                else:
-                    falhas += 1
-
-        # Atualiza o “original” para refletir o estado salvo
-        st.session_state[state_key] = edited_df.copy()
+            nivel_novo = row["nivel_material"]
+            ok = fn.atualizar_nivel_material_grupo(
+                id_usuario=str(id_usuario),
+                tipo_material=tipo,
+                nivel=nivel_novo,
+                _secrets=secrets,
+                error_log=st.session_state.get("error_log")
+            )
+            if ok:
+                sucessos += 1
+            else:
+                falhas += 1
 
         if sucessos:
-            st.success(f"{sucessos} registro(s) atualizado(s) com sucesso.")
+            st.success(f"{sucessos} nível(is) atualizado(s) com sucesso.")
         if falhas:
-            st.error(f"{falhas} registro(s) não puderam ser atualizados – verifique o log.")
+            st.error(f"{falhas} atualização(ões) falhou(aram) – verifique o log.")
 
-    # --------------------------------------------------------------
-    # 6️⃣ Exibir separador visual
-    # --------------------------------------------------------------
+    # 5️⃣ Separador visual
     st.markdown("---")
-    st.markdown("**📋 Resumo editável** (clique nas células para alterar)")
+    st.markdown("**📋 Níveis de estoque** (selecionar e salvar)")
