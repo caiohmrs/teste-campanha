@@ -409,14 +409,13 @@ def render_info_ranking(titulo: str, mensagem: str) -> None:
 # ----------------------------------------------------------------------
 # NOVOS COMPONENTES – REGISTRO E RESUMO DE MATERIAIS
 # ----------------------------------------------------------------------
-def render_material_form(colaboradores: list, tipos_material: list, secrets) -> None:
+def render_material_form(colaboradores: list, secrets) -> None:
     """
     Exibe um card com formulário para o supervisor registrar a entrega/atualização
     de material.
 
     Args:
         colaboradores – lista de tuplas [(id, nome), …] obtidas da aba “Equipe”.
-        tipos_material – lista de strings com os tipos disponíveis (ex.: “Água”, “Máscara”).
         secrets – dicionário de credenciais do Streamlit (necessário para chamar
                   ``fn.registrar_material_supervisor``).
     """
@@ -434,13 +433,20 @@ def render_material_form(colaboradores: list, tipos_material: list, secrets) -> 
         escolha = st.selectbox("Colaborador", opcoes, key="colab_sel")
         uid_sel, nome_sel = escolha.split(" - ", 1)
 
-        # ----------- Tipo de material --------------------------------------
-        tipo_sel = st.selectbox("Tipo de material", tipos_material, key="tipo_sel")
+        # ----------- Tipo de material livre ---------------------------------
+        tipo_sel = st.text_input(
+            "Tipo de material (ex.: “Água”, “Máscara”, “Kit de primeiros socorros”)",
+            key="tipo_input"
+        )
 
-        # ----------- Quantidade recebida -----------------------------------
+        # ----------- Quantidade entregue -----------------------------------
         qnt = st.number_input(
             "Quantidade entregue", min_value=1, step=1, key="qnt_input"
         )
+
+        # ----------- Identificar o grupo do supervisor --------------------
+        supervisor = st.session_state.get("usuario_logado", {})
+        id_grupo = supervisor.get("ID_Grupo")  # pode ser None
 
         # ----------- Botão de submissão ------------------------------------
         submit = st.form_submit_button("Registrar entrega")
@@ -449,8 +455,9 @@ def render_material_form(colaboradores: list, tipos_material: list, secrets) -> 
             ok = fn.registrar_material_supervisor(
                 id_usuario=uid_sel,
                 nome_usuario=nome_sel,
-                tipo_material=tipo_sel,
+                tipo_material=tipo_sel.strip(),
                 qnt_recebida=int(qnt),
+                id_grupo=id_grupo,            # passa opcionalmente o ID do grupo
                 secrets=secrets,
                 error_log=st.session_state.get("error_log"),
             )

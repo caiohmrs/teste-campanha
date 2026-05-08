@@ -1018,6 +1018,7 @@ def registrar_material_supervisor(
         nome_usuario: str,
         tipo_material: str,
         qnt_recebida: int,
+        id_grupo: str | None = None,
         secrets,
         error_log=None) -> bool:
     """
@@ -1026,7 +1027,17 @@ def registrar_material_supervisor(
     anterior (subtrai a quantidade recebida; caso queira “reabastecer”,
     troque a operação para ``+``).
 
-    Retorna ``True`` se a gravação ocorreu sem erro.
+    Params:
+        id_usuario (str): Identificador do colaborador.
+        nome_usuario (str): Nome do colaborador.
+        tipo_material (str): Nome do material (ex.: “Água”, “Máscara”).
+        qnt_recebida (int): Quantidade entregue nesta operação.
+        id_grupo (str | None): Identificador do grupo ao qual o supervisor pertence (opcional).
+        secrets (dict): Credenciais do Google.
+        error_log (list, optional): Lista de erros.
+
+    Returns:
+        bool: True se a gravação ocorreu sem erro.
     """
     try:
         # 1️⃣ cliente gspread
@@ -1060,14 +1071,18 @@ def registrar_material_supervisor(
 
         # 6️⃣ inserir nova linha
         agora = get_agora_br().strftime("%d/%m/%Y %H:%M:%S")
-        aba.append_row([
-            str(id_usuario),
-            str(nome_usuario),
-            agora,
-            str(tipo_material).strip(),
-            int(qnt_recebida),
-            int(nova_restante)
-        ])
+        nova_linha = [
+            str(id_usuario),               # id_usuario
+            str(nome_usuario),             # nome_usuario
+            agora,                         # data_registro
+            str(tipo_material).strip(),    # tipo_material (nome livre)
+            int(qnt_recebida),             # quantidade_recebida
+            int(nova_restante)             # quantidade_restante
+        ]
+        if id_grupo is not None:
+            nova_linha.append(str(id_grupo))
+
+        aba.append_row(nova_linha)
 
         return True
 
