@@ -308,7 +308,7 @@ def render_action_progress(actions: List[Dict[str, Any]]) -> None:
             pct = 0
         else:
             progresso_txt = f"{int(progresso)} / {int(limite)}"
-            pct = (float(progresso) / float(limite)) * 100) if limite else 0
+            pct = (float(progresso) / float(limite) * 100) if limite else 0
 
         badge_pts = render_points_badge(pontos) if pontos is not None else ""
 
