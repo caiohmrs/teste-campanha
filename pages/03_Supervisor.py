@@ -89,13 +89,13 @@ if "mensagem_exibida" not in st.session_state:
     st.session_state["mensagem_exibida"] = False
 # -----------------------------------------------------
 # ----------------------------------------------------------------------
-# 1️⃣  Garantir que a sessão tenha a chave "usuario_logado"
+# 1️⃣ Garantir que a sessão tenha a chave "usuario_logado"
 # ----------------------------------------------------------------------
 if "usuario_logado" not in st.session_state:
     st.session_state["usuario_logado"] = None
 
 # ----------------------------------------------------------------------
-# 2️⃣  Se não houver usuário logado, enviar para a tela de login
+# 2️⃣ Se não houver usuário logado, enviar para a tela de login
 # ----------------------------------------------------------------------
 if st.session_state["usuario_logado"] is None:
     # limpa possíveis caches que já foram criados antes do redirect
@@ -252,7 +252,7 @@ if cargo_limpo == "supervisor":
         linhas_hoje = df_leaderboard[df_leaderboard['data_dia'] == hoje_str]
 
         # --------------------------------------------------------------
-        # 1️⃣  Resumo das ações hoje (para o card de progresso - opcional)
+        # 1️⃣ Resumo das ações hoje (para o card de progresso - opcional)
         # --------------------------------------------------------------
         for acao, _ in PONTUACAO.items():
             limite = LIMITE_DIARIO.get(acao)               # None → ilimitado
@@ -260,7 +260,7 @@ if cargo_limpo == "supervisor":
             # O resumo não é usado diretamente aqui, mas pode servir para debug
 
         # --------------------------------------------------------------
-        # 2️⃣  Métricas do supervisor (pontos de hoje, total acumulado, etc.)
+        # 2️⃣ Métricas do supervisor (pontos de hoje, total acumulado, etc.)
         # --------------------------------------------------------------
         df_user = df_leaderboard[df_leaderboard['id_usuario'] == u['ID_Usuario']]
         if not df_user.empty:
@@ -268,33 +268,33 @@ if cargo_limpo == "supervisor":
             total_pontos = int(df_user.iloc[-1]['pontos_total'])
 
         # --------------------------------------------------------------
-        # 3️⃣  Ranking geral (top 10) – apenas supervisores
+        # 3️⃣ Ranking geral (top 10) – apenas supervisores
         # --------------------------------------------------------------
-        # a)  Última atualização de cada usuário
+        # a) Última atualização de cada usuário
         df_ultimas = df_leaderboard.sort_values('ultima_atualizacao') \
                                    .drop_duplicates('id_usuario', keep='last')
 
-        # b)  Unir com a planilha de usuários para obter o cargo
+        # b) Unir com a planilha de usuários para obter o cargo
         df_usuarios_tmp = df_usuarios[['ID_Usuario', 'Cargo']].rename(columns={'ID_Usuario': 'id_usuario'})
         df_ultimas = df_ultimas.merge(df_usuarios_tmp, on='id_usuario', how='left')
 
-        # c)  Filtrar somente usuários cujo cargo contém “supervisor”
+        # c) Filtrar somente usuários cujo cargo contém “supervisor”
         df_ultimas = df_ultimas[
             df_ultimas['Cargo'].astype(str).str.lower().str.contains('supervisor')
         ]
 
-        # d)  Ordenar por pontuação total (desc) e recomputar a posição
+        # d) Ordenar por pontuação total (desc) e recomputar a posição
         df_ordenado = df_ultimas.sort_values('pontos_total', ascending=False).reset_index(drop=True)
         df_ordenado['posicao'] = df_ordenado.index + 1
 
-        # e)  Garantir que a coluna de ganhos seja numérica
+        # e) Garantir que a coluna de ganhos seja numérica
         df_ordenado['pontos_ganhos'] = (
             pd.to_numeric(df_ordenado['pontos_ganhos'], errors='coerce')
             .fillna(0)
             .astype(int)
         )
 
-        # f)  Converter para a lista esperada por render_leaderboard()
+        # f) Converter para a lista esperada por render_leaderboard()
         ranking = df_ordenado[['posicao', 'nome', 'pontos_total', 'pontos_ganhos']].rename(
             columns={
                 'nome'        : 'nome',
@@ -303,13 +303,13 @@ if cargo_limpo == "supervisor":
             }
         ).to_dict('records')
 
-        # g)  Posição atual do supervisor (após filtro)
+        # g) Posição atual do supervisor (após filtro)
         linha_user = df_ordenado[df_ordenado['id_usuario'] == u['ID_Usuario']]
         if not linha_user.empty:
             posicao_atual = int(linha_user.iloc[0]['posicao'])
 
         # --------------------------------------------------------------
-        # 4️⃣  Lista de progresso das minhas ações (para o componente)
+        # 4️⃣ Lista de progresso das minhas ações (para o componente)
         # --------------------------------------------------------------
         df_user_today = df_leaderboard[
             (df_leaderboard['id_usuario'] == u['ID_Usuario']) &
@@ -499,7 +499,7 @@ if cargo_limpo == "supervisor":
                                         datetime.now(timezone.utc) - timedelta(hours=3))
             d_str = data_sel.strftime("%d/%m/%Y")
             logs_dia = df_logs[df_logs['Data_Hora'].str.contains(d_str)]
-            ativos_dia = logs_dia[logs_dia['ID_Usuario'].isin(minha_equipe['ID_Usuario']])]
+            ativos_dia = logs_dia[logs_dia['ID_Usuario'].isin(minha_equipe['ID_Usuario'])]
             total_vol = len(minha_equipe)
             num_ativos = ativos_dia[ativos_dia['Tipo_Acao'].str.contains("Check-in")]['ID_Usuario'].nunique()
             total_acoes = len(ativos_dia)
@@ -574,7 +574,7 @@ if cargo_limpo == "supervisor":
     # ----------------------------------------------------------------------
     with tab_ranking:
         # -------------------------------------------------------------
-        # 1️⃣  Explicação do Ranking
+        # 1️⃣ Explicação do Ranking
         # -------------------------------------------------------------
         with st.expander("⚙️ Como funciona o Ranking", expanded=False):
             render_info_ranking(
@@ -587,7 +587,7 @@ if cargo_limpo == "supervisor":
             )
 
         # -------------------------------------------------------------
-        # 2️⃣  Progresso das Ações do Usuário
+        # 2️⃣ Progresso das Ações do Usuário
         # -------------------------------------------------------------
         with st.expander("🚀 Progresso das minhas ações", expanded=False):
             if acoes_progresso:
@@ -596,7 +596,7 @@ if cargo_limpo == "supervisor":
                 st.info("Nenhuma ação realizada ainda.")
 
         # -------------------------------------------------------------
-        # 3️⃣  Leaderboard Geral
+        # 3️⃣ Leaderboard Geral
         # -------------------------------------------------------------
         # **Leaderboard – agora exibido fora de qualquer expander**
         if ranking:
