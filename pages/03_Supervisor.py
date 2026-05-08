@@ -481,11 +481,9 @@ if cargo_limpo == "supervisor":
 
             # Tipos de material disponíveis (pode ser estendido futuramente)
             tipos_material = [
-                "Água",
-                "Máscara",
-                "Kit de primeiros socorros",
-                "Alimento",
-                "Outro"
+                "Panfleto",
+                "Adesivo",
+                "Kits"
             ]
 
             st.subheader("📦 Controle de Materiais da Equipe")
