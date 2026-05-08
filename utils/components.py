@@ -365,9 +365,9 @@ def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
     # Linhas individuais
     for linha in ranking:
         pos = linha.get("posicao")
-        nome = line
-
+        # Correção: uso da variável correta
         nome = linha.get("nome", "")
+
         pts = linha.get("pontos", 0)
         ganho = linha.get("ganho")
 
