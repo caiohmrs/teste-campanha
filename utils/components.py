@@ -11,6 +11,7 @@ import streamlit as st
 import urllib.parse
 from typing import List, Dict, Any
 from utils.gamification import ACTION_LABELS   # ← novo import
+from utils import funcoes as fn                  # <-- IMPORTAÇÃO PADRÃO (como nos outros componentes)
 
 def render_login_header():
     """Renderiza o cabeçalho da tela de login."""
@@ -419,8 +420,6 @@ def render_material_form(colaboradores: list, tipos_material: list, secrets) -> 
         secrets – dicionário de credenciais do Streamlit (necessário para chamar
                   ``fn.registrar_material_supervisor``).
     """
-    import streamlit as st
-
     # --------------------------------------------------------------
     # CARD (classe .material-card) que envolve todo o formulário
     # --------------------------------------------------------------
@@ -447,7 +446,7 @@ def render_material_form(colaboradores: list, tipos_material: list, secrets) -> 
         submit = st.form_submit_button("Registrar entrega")
 
         if submit:
-            ok = registrar_material_supervisor(
+            ok = fn.registrar_material_supervisor(
                 id_usuario=uid_sel,
                 nome_usuario=nome_sel,
                 tipo_material=tipo_sel,
@@ -470,9 +469,7 @@ def render_material_summary(id_usuario: str, secrets) -> None:
         id_usuario – ID do colaborador cujo resumo será exibido.
         secrets – dicionário de credenciais (necessário para ``fn.obter_resumo_materiais``).
     """
-    import streamlit as st
-
-    df = obter_resumo_materiais(id_usuario=id_usuario, secrets=secrets)
+    df = fn.obter_resumo_materiais(id_usuario=id_usuario, secrets=secrets)
 
     if df.empty:
         st.info("Ainda não há registros de material para este colaborador.")
