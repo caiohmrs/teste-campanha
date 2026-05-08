@@ -569,7 +569,7 @@ def carregar_macro_grupos_cached(planilha_id):
     """
     try:
         # Usa URL pública para evitar chamada de API
-        url = f"https://docs.google.com/spreadsheets/d/{planilha_id}/gviz/tq?tqx=out:csv&sheet=Grupos"
+        url = f"https://docs.google.com/spreadsheets/d/{planilha_id}/gviz/tq?out:csv&sheet=Grupos"
         df = pd.read_csv(url)
 
         # Extrai Macro_Grupos únicos (excluindo vazios)
@@ -598,7 +598,7 @@ def carregar_grupos_completos_cached(planilha_id):
     """
     try:
         # Usa URL pública para evitar chamada de API
-        url = f"https://docs.google.com/spreadsheets/d/{planilha_id}/gviz/tq?tqx=out:CSV&sheet=Grupos"
+        url = f"https://docs.google.com/spreadsheets/d/{planilha_id}/gviz/tq?out:CSV&sheet=Grupos"
         df = pd.read_csv(url)
 
         # ✅ FILTRA: Exclui linhas que são apenas Macro_Grupos (ID começa com '_MACRO_')
@@ -1018,8 +1018,8 @@ def registrar_material_supervisor(
         nome_usuario: str,
         tipo_material: str,
         qnt_recebida: int,
-        id_grupo: str | None = None,
         secrets,
+        id_grupo: str | None = None,
         error_log=None) -> bool:
     """
     Registra a entrega/atualização de material para um colaborador.
@@ -1032,8 +1032,8 @@ def registrar_material_supervisor(
         nome_usuario (str): Nome do colaborador.
         tipo_material (str): Nome do material (ex.: “Água”, “Máscara”).
         qnt_recebida (int): Quantidade entregue nesta operação.
-        id_grupo (str | None): Identificador do grupo ao qual o supervisor pertence (opcional).
         secrets (dict): Credenciais do Google.
+        id_grupo (str | None): Identificador do grupo ao qual o supervisor pertence (opcional).
         error_log (list, optional): Lista de erros.
 
     Returns:
