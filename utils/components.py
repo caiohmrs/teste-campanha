@@ -419,7 +419,7 @@ def render_material_form(secrets) -> None:
     with st.form(key="form_material_grupo", clear_on_submit=True):
         # --------‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑-
         tipo_sel = st.text_input(
-            "Tipo de material (ex.: “Água”, “Máscara”, “Kit de primeiros socorros”)",
+            "Tipo de material (ex.: “Panfleto”, “Adesivo”, “Kits”)",
             key="tipo_input"
         )
 
