@@ -880,36 +880,39 @@ def get_css():
             margin-bottom: 12px !important;
         }}
 
-        /* 34. TABELA DE RESUMO DE MATERIAIS */
-        .material-summary-table {{
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }}
-
+        /* 34. TABELA DE RESUMO DE MATERIAIS – estilos reforçados para obedecer ao tema */
+        /* Aumentamos a especificidade e usamos !important para sobrescrever os estilos
+           internos que o Streamlit aplica às tabelas (classe .stDataFrame). */
+        .material-summary-table,
         .material-summary-table th,
         .material-summary-table td {{
-            border: 2px solid var(--cor-texto);
-            padding: 8px 12px;
-            text-align: center;
-            font-family: var(--fonte-texto);
+            background-color: transparent !important;
+            color: inherit !important;
         }}
 
         .material-summary-table th {{
-            background-color: var(--cor-primaria);
-            color: var(--cor-texto);
+            background-color: var(--cor-primaria) !important;
+            color: var(--cor-texto) !important;
             font-weight: bold;
             text-transform: uppercase;
+            border: 2px solid var(--cor-texto) !important;
+            padding: 8px 12px !important;
+            text-align: center !important;
+            font-family: var(--fonte-texto) !important;
         }}
 
         .material-summary-table td {{
-            background-color: var(--cor-branco);
-            color: var(--cor-texto);
+            background-color: var(--cor-branco) !important;
+            color: var(--cor-texto) !important;
+            border: 2px solid var(--cor-texto) !important;
+            padding: 8px 12px !important;
+            text-align: center !important;
+            font-family: var(--fonte-texto) !important;
         }}
 
         .material-summary-table .restante {{
-            font-weight: bold;
-            color: var(--cor-secundaria);
+            font-weight: bold !important;
+            color: var(--cor-secundaria) !important;
         }}
 
         /* 35. BOTÕES PERSONALIZADOS DO MÓDULO DE MATERIAIS */
