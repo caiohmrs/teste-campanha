@@ -408,7 +408,8 @@ def render_material_form(secrets) -> None:
     O componente captura automaticamente o ``ID_Grupo`` do supervisor
     que está logado e o envia para ``fn.registrar_material_supervisor`` (campo
     ``id_grupo`` da função backend).  O ``qnt_total`` e o ``qnt_usada``
-    são gravados nas colunas “quantidade_total” e “quantidade_restante”.
+    são gravados nas colunas “quantidade_total”, ``quantidade_restante`` e
+    ``nivel_material``.
     """
     st.markdown(
         '<div class="material-card"><h3>📦 Registro de Material (Grupo)</h3></div>',
@@ -416,18 +417,19 @@ def render_material_form(secrets) -> None:
     )
 
     with st.form(key="form_material_grupo", clear_on_submit=True):
+        # --------‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑-
         tipo_sel = st.text_input(
             "Tipo de material (ex.: “Água”, “Máscara”, “Kit de primeiros socorros”)",
             key="tipo_input"
         )
 
-        total_qnt = st.number_input(
-            "Quantidade TOTAL recebida", min_value=0, step=1, key="total_input"
-        )
-
-        usada_qnt = st.number_input(
-            "Quantidade já USADA (ou seja, que já saiu do estoque)",
-            min_value=0, step=1, key="usada_input"
+        # Nível de estoque (não há mais quantidade numérica)
+        niveis = ["Pouco", "Médio", "Muito", "Acabou"]
+        nivel_sel = st.selectbox(
+            "Nível de estoque a registrar",
+            niveis,
+            index=niveis.index("Médio"),
+            key="nivel_input"
         )
 
         supervisor = st.session_state.get("usuario_logado", {})
@@ -441,8 +443,7 @@ def render_material_form(secrets) -> None:
                 id_usuario=str(id_grupo) if id_grupo is not None else "DESCONHECIDO",
                 nome_usuario=str(nome_grupo),
                 tipo_material=tipo_sel.strip(),
-                qnt_total=int(total_qnt),
-                qnt_usada=int(usada_qnt),
+                nivel_material=nivel_sel,
                 id_grupo=id_grupo,            # opcional – será gravado na coluna “grupo_id”
                 secrets=secrets,
                 error_log=st.session_state.get('error_log'),
@@ -460,6 +461,7 @@ def render_material_summary(id_usuario: str, secrets) -> None:
     * Pouco
     * Médio
     * Muito
+    * Acabou
 
     Ao clicar em **“💾 Salvar nível”**, o valor escolhido é gravado
     na coluna ``nivel_material`` da aba “Materiais”.

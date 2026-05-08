@@ -860,7 +860,7 @@ def simular_acao_usuario(id_usuario, tipo_acao, secrets, error_log=None):
 
 
 # -------------------------------------------------------------------------
-# G A M I F I C A Ç Ã O   –   FUNÇÕES AUXILIARES
+# G A M I F I C A Ç Ã O   – FUNÇÕES AUXILIARES
 # -------------------------------------------------------------------------
 def _ws_leaderboard(planilha_id, secrets, error_log=None):
     """
@@ -1018,22 +1018,25 @@ def registrar_material_supervisor(
         id_usuario: str,
         nome_usuario: str,
         tipo_material: str,
-        qnt_total: int,          # ← quantidade **total** que o grupo recebeu
-        qnt_usada: int,          # ← quantidade **já utilizada**
+        nivel_material: str,      # ← “Pouco”, “Médio”, “Muito” ou “Acabou”
         secrets,
         id_grupo: str | None = None,
         error_log=None) -> bool:
     """
-    Registra a entrega/atualização de material para um colaborador ou grupo.
-    Atualiza a coluna ``quantidade_restante`` com base no total recebido
-    e na quantidade já utilizada (total - usada).
+    Registra a **quantidade** de material com base num nível simbólico.
 
-    Params:
+    * **nivel_material** → valor numérico (mapeado na constante
+      ``NIVEL_PARA_QUANTIDADE``).  O valor numérico será salvo nas
+      colunas ``quantidade_total`` e ``quantidade_restante`` (restante =
+      total, pois ainda não há “usado”).
+    * O próprio nível é armazenado na coluna ``nivel_material`` para
+      que o supervisor possa visualizá‑lo/alterá‑lo depois.
+
+    Args:
         id_usuario (str): Identificador do colaborador ou do grupo.
         nome_usuario (str): Nome do colaborador ou do grupo.
         tipo_material (str): Nome do material (ex.: “Água”, “Máscara”).
-        qnt_total (int): Quantidade total recebida neste registro.
-        qnt_usada (int): Quantidade já utilizada (ou seja, que já saiu do estoque).
+        nivel_material (str): “Pouco”, “Médio”, “Muito” ou “Acabou”.
         secrets (dict): Credenciais do Google.
         id_grupo (str | None): Identificador do grupo (opcional).
         error_log (list, optional): Lista de erros.
@@ -1051,61 +1054,41 @@ def registrar_material_supervisor(
         planilha = client.open_by_key(secrets["planilha"]["id"])
         aba = planilha.worksheet("Materiais")
 
-        # 3️⃣ ler registros já existentes do usuário + tipo
-        dados = aba.get_all_records()
-        linhas_filtradas = [
-            r for r in dados
-            if str(r.get('id_usuario')).strip() == str(id_usuario).strip()
-            and str(r.get('tipo_material')).strip().lower()
-                == str(tipo_material).strip().lower()
-        ]
+        # 3️⃣ Conversão de nível → quantidade (valor fixo)
+        NIVEL_PARA_QUANTIDADE = {
+            "Pouco":   5,
+            "Médio":  15,
+            "Muito": 30,
+            "Acabou": 0
+        }
+        total = NIVEL_PARA_QUANTIDADE.get(str(nivel_material).strip().title(), 0)
+        nova_restante = total          # ainda não há “usado”
 
-        # 4️⃣ quantidade_restante anterior (último registro)
-        if linhas_filtradas:
-            ultima = max(linhas_filtradas,
-                         key=lambda r: r.get('data_registro', ''))
-            restante_anterior = int(ultima.get('quantidade_restante', 0))
-        else:
-            restante_anterior = 0
-
-        # 5️⃣ nova quantidade restante – calculamos a partir do total e da usada
-        try:
-            total = int(qnt_total)
-            usada = int(qnt_usada)
-        except Exception:
-            total = int(qnt_total) if isinstance(qnt_total, (int, float, str)) else 0
-            usada = int(qnt_usada) if isinstance(qnt_usada, (int, float, str)) else 0
-
-        nova_restante = max(0, total - usada)
-
-        # 6️⃣ Inserir nova linha – respeita o cabeçalho existente
+        # 4️⃣ Inserir nova linha – garante colunas de nível e total
         agora = get_agora_br().strftime("%d/%m/%Y %H:%M:%S")
-        cabecalho = aba.row_values(1)          # primeira linha da aba
+        cabecalho = aba.row_values(1)
 
-        # Detecta o nome da coluna que contém a quantidade total
-        col_qtd = 'quantidade_total' if 'quantidade_total' in cabecalho else 'quantidade_recebida'
+        # Garante que a coluna “nivel_material” exista
+        if 'nivel_material' not in cabecalho:
+            aba.update('A1', cabecalho + ['nivel_material'])
+            cabecalho.append('nivel_material')
 
-        # Constrói a linha na ordem exata do cabeçalho (ignora colunas ausentes)
+        # Constrói a linha na ordem exata do cabeçalho
         nova_linha = [
             str(id_usuario),               # id_usuario
             str(nome_usuario),             # nome_usuario
             agora,                         # data_registro
             str(tipo_material).strip(),    # tipo_material
-            total,                        # quantidade total (coluna correta)
-            int(nova_restante)            # quantidade_restante
+            total,                         # quantidade_total
+            int(nova_restante)             # quantidade_restante
         ]
 
-        # Se o cabeçalho possui a coluna “id_grupo”, inclui‑a
+        # Coluna opcional “id_grupo”
         if 'id_grupo' in cabecalho:
             nova_linha.append(str(id_grupo) if id_grupo is not None else "")
 
-        # Se o cabeçalho tem a coluna antiga “quantidade_recebida” (quando
-        # ainda não foi criada a nova), garante que o valor vá para a
-        # posição correta (substitui o placeholder que foi inserido acima)
-        if col_qtd == 'quantidade_recebida':
-            # “quantidade_total” ainda não existe → já inserimos na ordem
-            # padrão acima (col_qtd será a quinta coluna)
-            pass
+        # Coluna “nivel_material”
+        nova_linha.append(str(nivel_material).strip().title())
 
         aba.append_row(nova_linha)
 
