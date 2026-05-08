@@ -62,8 +62,10 @@ from utils.components import (
     render_position_badge,
     render_points_badge,
     render_action_progress,
-    render_info_ranking  # ← já estava importado
+    render_info_ranking,
+    render_material_form,          # <-- INCLUIR AQUI
 )
+
 # ← novos imports de gamificação
 from utils.gamification import PONTUACAO, LIMITE_DIARIO, ACTION_LABELS
 
@@ -464,7 +466,32 @@ if cargo_limpo == "supervisor":
     with tab_equipe:
         st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
         if df_usuarios is not None and df_logs is not None:
+            # ------------------------------------------------------------------
+            # Equipe do supervisor
+            # ------------------------------------------------------------------
             minha_equipe = df_usuarios[df_usuarios['ID_Supervisor'].astype(str) == str(u['ID_Usuario'])]
+            
+            # --------- NOVO BLOCOS ----------
+            # Lista de colaboradores (ID + Nome) que pertencem ao supervisor
+            colaboradores = [
+                (str(vol['ID_Usuario']), vol['Nome'])
+                for _, vol in minha_equipe.iterrows()
+            ]
+
+            # Tipos de material disponíveis (pode ser estendido futuramente)
+            tipos_material = [
+                "Água",
+                "Máscara",
+                "Kit de primeiros socorros",
+                "Alimento",
+                "Outro"
+            ]
+
+            st.subheader("📦 Controle de Materiais da Equipe")
+            render_material_form(colaboradores, tipos_material, st.secrets)
+            st.markdown("---")
+            # --------------------------------
+
             espaco_metricas = st.empty()
             c_data, _ = st.columns([1.5, 1])
             with c_data:
@@ -472,7 +499,7 @@ if cargo_limpo == "supervisor":
                                         datetime.now(timezone.utc) - timedelta(hours=3))
             d_str = data_sel.strftime("%d/%m/%Y")
             logs_dia = df_logs[df_logs['Data_Hora'].str.contains(d_str)]
-            ativos_dia = logs_dia[logs_dia['ID_Usuario'].isin(minha_equipe['ID_Usuario'])]
+            ativos_dia = logs_dia[logs_dia['ID_Usuario'].isin(minha_equipe['ID_Usuario']])]
             total_vol = len(minha_equipe)
             num_ativos = ativos_dia[ativos_dia['Tipo_Acao'].str.contains("Check-in")]['ID_Usuario'].nunique()
             total_acoes = len(ativos_dia)
