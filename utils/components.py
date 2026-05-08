@@ -11,7 +11,7 @@ import streamlit as st
 import urllib.parse
 from typing import List, Dict, Any
 from utils.gamification import ACTION_LABELS   # ← novo import
-from utils import funcoes as fn                  # <-- IMPORTAÇÃO PADRÃO (como nos outros componentes)
+import funcoes as fn                  # <-- IMPORTAÇÃO PADRÃO (como nos outros componentes)
 
 def render_login_header():
     """Renderiza o cabeçalho da tela de login."""
