@@ -298,7 +298,7 @@ if cargo_limpo == "supervisor":
         # f) Converter para a lista esperada por render_leaderboard()
         ranking = df_ordenado[['posicao', 'nome', 'pontos_total', 'pontos_ganhos']].rename(
             columns={
-                'nome'        : 'nome',
+                'nome': 'nome',
                 'pontos_total': 'pontos',
                 'pontos_ganhos': 'ganho'
             }
@@ -322,10 +322,10 @@ if cargo_limpo == "supervisor":
             feitas = int(df_user_today[df_user_today['tipo_acao'] == acao].shape[0])
             nome_elegante = ACTION_LABELS.get(acao, acao.replace('_', ' ').title())
             acoes_progresso.append({
-                "nome"   : nome_elegante,
-                "feitas" : feitas,
-                "limite" : limite,
-                "pontos" : pts_por_acao
+                "nome": nome_elegante,
+                "feitas": feitas,
+                "limite": limite,
+                "pontos": pts_por_acao
             })
 
     # ----------------------------------------------------------------------
@@ -491,6 +491,20 @@ if cargo_limpo == "supervisor":
             st.subheader("📦 Controle de Materiais da Equipe")
             render_material_form(st.secrets)          # <-- CHAMADA ATUALIZADA
             st.markdown("---")
+            # ------------------------------------------------------
+            #  RESUMO DOS MATERIAIS JÁ REGISTRADOS (por grupo)
+            # ------------------------------------------------------
+            # O supervisor pertence a um grupo identificado por `ID_Grupo`.
+            # Passamos esse ID ao componente; ele reutiliza a mesma lógica
+            # de `obter_resumo_materiais` (filtra pela coluna `id_usuario` da aba
+            # “Materiais”).  Assim o supervisor vê, de forma consolidada,
+            # o total entregue e o restante de cada tipo de material que já
+            # foi cadastrado para o seu grupo.
+            grupo_id = str(u.get("ID_Grupo", "")).strip()
+            if grupo_id:
+                render_material_summary(id_usuario=grupo_id, secrets=st.secrets)
+            else:
+                st.info("ID do grupo não encontrado – não há resumo para exibir.")
             # --------------------------------
 
             espaco_metricas = st.empty()
@@ -506,7 +520,7 @@ if cargo_limpo == "supervisor":
             total_acoes = len(ativos_dia)
 
             st.markdown(f'''
-                <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px; font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);'>
+                <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px; font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);">
                     📋 STATUS DA EQUIPE ({d_str[:5]})
                 </h3>
                 ''', unsafe_allow_html=True)
