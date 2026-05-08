@@ -108,6 +108,7 @@ def get_css():
         [data-testid="stMainBlockContainer"] {{
             background-color: transparent !important;
         }}
+
         /* 2. SIDEBAR */
         section[data-testid="stSidebar"] {{
             background-color: var(--cor-primaria) !important;
@@ -808,7 +809,7 @@ def get_css():
             color: var(--cor-texto);
         }}
 
-        /* 31. ACTION PROGRESS CARD (GAMIFICAÇÃO) */
+        /* 31. ACTION PROGRESS CARD (GAMIFICAÇÃO) – DUPLICATA (mantida por compatibilidade) */
         .action-progress-card {{
             background-color: var(--cor-primaria);
             border: 4px solid var(--cor-texto);
@@ -854,9 +855,7 @@ def get_css():
             transition: width 0.4s ease;
         }}
 
-        /* --------------------------------------------------------------
-           33. CARD DE FORMULÁRIO DE MATERIAIS (usado pelo SUPERVISOR)
-           -------------------------------------------------------------- */
+        /* 33. CARD DE FORMULÁRIO DE MATERIAIS (usado pelo SUPERVISOR) */
         .material-card {{
             background-color: var(--cor-branco);
             border: 4px solid var(--cor-texto);
@@ -881,9 +880,7 @@ def get_css():
             margin-bottom: 12px !important;
         }}
 
-        /* --------------------------------------------------------------
-           34. TABELA DE RESUMO DE MATERIAIS
-           -------------------------------------------------------------- */
+        /* 34. TABELA DE RESUMO DE MATERIAIS */
         .material-summary-table {{
             width: 100%;
             border-collapse: collapse;
@@ -915,10 +912,8 @@ def get_css():
             color: var(--cor-secundaria);
         }}
 
-        /* --------------------------------------------------------------
-           35. BOTÕES PERSONALIZADOS DO MÓDULO DE MATERIAIS
-           -------------------------------------------------------------- */
-        /* Botões dentro do card de registro (usar .material-card button) */
+        /* 35. BOTÕES PERSONALIZADOS DO MÓDULO DE MATERIAIS */
+        /* Botões dentro do card de registro */
         .material-card button {{
             background-color: var(--cor-secundaria) !important;
             color: var(--cor-branco) !important;
