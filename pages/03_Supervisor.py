@@ -471,15 +471,15 @@ if cargo_limpo == "supervisor":
             # Equipe do supervisor
             # ------------------------------------------------------------------
             minha_equipe = df_usuarios[df_usuarios['ID_Supervisor'].astype(str) == str(u['ID_Usuario'])]
-            
-            # --------- NOVO BLOCOS ----------
-            # Lista de colaboradores (ID + Nome) que pertencem ao supervisor
+
+            # --------- LISTAS AUXILIARES ----------
+            # colaboradores (ID + Nome) que pertencem ao supervisor
             colaboradores = [
                 (str(vol['ID_Usuario']), vol['Nome'])
                 for _, vol in minha_equipe.iterrows()
             ]
 
-            # Tipos de material disponíveis (pode ser estendido futuramente)
+            # tipos de material (pode ser ajustado futuramente)
             tipos_material = [
                 "Panfleto",
                 "Adesivo",
@@ -487,7 +487,7 @@ if cargo_limpo == "supervisor":
             ]
 
             # --------------------------------------------------------------
-            #  CONTROLE DE MATERIAIS + RESUMO (agora dentro de um **expander**)
+            #  CONTROLE DE MATERIAIS + RESUMO (dentro de um **expander**)
             # --------------------------------------------------------------
             with st.expander("📦 Controle de Materiais e Nível de Estoque", expanded=False):
                 st.subheader("Controle de Recebimento de Materiais")
@@ -500,36 +500,48 @@ if cargo_limpo == "supervisor":
                 # ------------------------------------------------------
                 #  Resumo dos materiais já registrados (por grupo)
                 # ------------------------------------------------------
-                # O supervisor pertence a um grupo identificado por `ID_Grupo`.
-                # Passamos esse ID ao componente; ele reutiliza a mesma lógica
-                # de `obter_resumo_materiais` (filtra pela coluna `id_usuario`
-                # da aba “Materiais”). Assim o supervisor vê, de forma
-                # consolidada, o total entregue e o restante de cada tipo de
-                # material que já foi cadastrado para o seu grupo.
                 grupo_id = str(u.get("ID_Grupo", "")).strip()
                 if grupo_id:
                     render_material_summary(id_usuario=grupo_id, secrets=st.secrets)
                 else:
                     st.info("ID do grupo não encontrado – não há resumo para exibir.")
 
-            espaco_metricas = st.empty()
+            # --------------------------------------------------------------
+            #  DATA DE ANÁLISE – exibida **depois** do título de status
+            # --------------------------------------------------------------
+            # 1️⃣ Armazenar a data selecionada em session_state (permite que
+            #    o cabeçalho seja renderizado antes do widget)
+            if "data_analise" not in st.session_state:
+                st.session_state["data_analise"] = datetime.now(timezone.utc) - timedelta(hours=3)
+
+            # 2️⃣ Título de status da equipe (usa a data já armazenada)
+            d_str = st.session_state["data_analise"].strftime("%d/%m/%Y")
+            st.markdown(f'''
+                <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px;
+                           font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);">
+                    📋 STATUS DA EQUIPE ({d_str[:5]})
+                </h3>
+                ''', unsafe_allow_html=True)
+
+            # 3️⃣ Widget de seleção de data (aparece **após** o título)
             c_data, _ = st.columns([1.5, 1])
             with c_data:
-                data_sel = st.date_input("📅 DATA DE ANÁLISE",
-                                        datetime.now(timezone.utc) - timedelta(hours=3))
-            d_str = data_sel.strftime("%d/%m/%Y")
+                nova_data = st.date_input("📅 DATA DE ANÁLISE",
+                                          value=st.session_state["data_analise"])
+                # Atualiza o valor armazenado para a próxima execução
+                st.session_state["data_analise"] = nova_data
+
+            # 4️⃣ Recalcula strings e filtros usando a data possivelmente alterada
+            d_str = st.session_state["data_analise"].strftime("%d/%m/%Y")
             logs_dia = df_logs[df_logs['Data_Hora'].str.contains(d_str)]
             ativos_dia = logs_dia[logs_dia['ID_Usuario'].isin(minha_equipe['ID_Usuario'])]
             total_vol = len(minha_equipe)
             num_ativos = ativos_dia[ativos_dia['Tipo_Acao'].str.contains("Check-in")]['ID_Usuario'].nunique()
             total_acoes = len(ativos_dia)
 
-            st.markdown(f'''
-                <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px; font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);">
-                    📋 STATUS DA EQUIPE ({d_str[:5]})
-                </h3>
-                ''', unsafe_allow_html=True)
-
+            # --------------------------------------------------------------
+            #  EXPANDERS – um para cada membro da equipe
+            # --------------------------------------------------------------
             for _, vol in minha_equipe.iterrows():
                 logs_vol = df_logs[
                     (df_logs['ID_Usuario'] == vol['ID_Usuario']) &
@@ -557,7 +569,7 @@ if cargo_limpo == "supervisor":
                             badge = None
                             if "Check-out" in row['Tipo_Acao'] and fb and fb != "nan":
                                 badge = fb.split('|')[0]
-                            loc = row.get('Localização', '')
+                            loc = row.get('Localizacao', '')
                             mostrar_mapa = "," in str(loc)
                             render_log_entry(
                                 acao=acao_txt,
@@ -582,12 +594,12 @@ if cargo_limpo == "supervisor":
                     with c_w2:
                         st.link_button("💬 CHAT", f"https://wa.me/{w_vol}", width='stretch')
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        nome_primeiro = u['Nome'].split()[0].upper()
-        rel_txt = f"📊 *RELATÓRIO {d_str}*\n👤 Sup: {nome_primeiro}\n👥 Equipe: {total_vol}\n🔥 Ativos: {num_ativos}\n🎯 Ações: {total_acoes}"
-        st.link_button("📲 ENVIAR RELATÓRIO P/ COORDENAÇÃO",
-                       f"https://api.whatsapp.com/send?text={urllib.parse.quote(rel_txt)}",
-                       width='stretch')
+            st.markdown("<br>", unsafe_allow_html=True)
+            nome_primeiro = u['Nome'].split()[0].upper()
+            rel_txt = f"📊 *RELATÓRIO {d_str}*\n👤 Sup: {nome_primeiro}\n👥 Equipe: {total_vol}\n🔥 Ativos: {num_ativos}\n🎯 Ações: {total_acoes}"
+            st.link_button("📲 ENVIAR RELATÓRIO P/ COORDENAÇÃO",
+                           f"https://api.whatsapp.com/send?text={urllib.parse.quote(rel_txt)}",
+                           width='stretch')
 
     # ----------------------------------------------------------------------
     # Aba Ranking – accordion (expander) para melhor usabilidade
