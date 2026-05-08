@@ -524,11 +524,14 @@ if cargo_limpo == "supervisor":
                 </h3>
                 ''', unsafe_allow_html=True)
 
-            # 3️⃣ Widget de seleção de data (aparece **após** o título)
-            c_data, _ = st.columns([1.1, 1])
-            with c_data:
-                nova_data = st.date_input("📅 DATA DE ANÁLISE",
-                                          value=st.session_state["data_analise"])
+            # 3️⃣ Widget de seleção de data (agora centralizado)
+            # Cria três colunas de mesmo tamanho; o widget ficará na coluna do meio.
+            col_esq, col_centro, col_dir = st.columns([1, 1, 1])
+            with col_centro:
+                nova_data = st.date_input(
+                    "📅 DATA DE ANÁLISE",
+                    value=st.session_state["data_analise"]
+                )
                 # Atualiza o valor armazenado para a próxima execução
                 st.session_state["data_analise"] = nova_data
 
