@@ -472,7 +472,7 @@ def render_material_summary(id_usuario: str, secrets) -> None:
         return
 
     # 2️⃣ Definir opções de nível
-    niveis = ["Pouco", "Médio", "Muito"]
+    niveis = ["Pouco", "Médio", "Muito", "Acabou"]
 
     # 3️⃣ Interface linha‑a‑linha **com botão individual**
     for idx, row in df_raw.iterrows():
