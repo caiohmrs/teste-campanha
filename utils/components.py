@@ -8,10 +8,11 @@
 # =============================================================================
 
 import streamlit as st
-import urllib.parse
+import pandas as pd
 from typing import List, Dict, Any
 from utils.gamification import ACTION_LABELS   # ← novo import
 import funcoes as fn                  # <-- IMPORTAÇÃO PADRÃO (como nos outros componentes)
+
 
 def render_login_header():
     """Renderiza o cabeçalho da tela de login."""
@@ -370,7 +371,7 @@ def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
 
 
 # ----------------------------------------------------------------------
-# NOVO COMPONENTE – INFORMAÇÃO DO RANKING
+# NOVO COMPONENTE – INFORMAÇÃO DO RANKING
 # ----------------------------------------------------------------------
 def render_info_ranking(titulo: str, mensagem: str) -> None:
     """
@@ -397,7 +398,7 @@ def render_info_ranking(titulo: str, mensagem: str) -> None:
 # ----------------------------------------------------------------------
 def render_material_form(secrets) -> None:
     """
-    Exibe um card com formulário **para registrar material a nível de grupo**.
+    Exibe **card** com formulário **para registrar material a nível de grupo**.
 
     Não é necessário escolher um colaborador individual; o supervisor
     informa apenas:
@@ -454,28 +455,86 @@ def render_material_form(secrets) -> None:
 
 def render_material_summary(id_usuario: str, secrets) -> None:
     """
-    Renderiza a tabela de resumo de materiais para o usuário indicado.
-    Utiliza a classe ``.material-summary-table`` definida em utils/styles.py.
-
-    Args:
-        id_usuario – ID do colaborador cujo resumo será exibido.
-        secrets – dicionário de credenciais (necessário para ``fn.obter_resumo_materiais``).
+    Exibe **tabela editável** de materiais para o usuário/grupo indicado.
+    O supervisor pode alterar ``quantidade_total`` e ``quantidade_restante``.
+    As alterações são salvas na aba “Materiais” ao clicar em “Salvar alterações”.
     """
-    df = fn.obter_resumo_materiais(id_usuario=id_usuario, _secrets=secrets)
+    # --------------------------------------------------------------
+    # 1️⃣ Carregar os registros “brutos” (um linha por tipo)
+    # --------------------------------------------------------------
+    df_raw = fn.obter_materiais_por_grupo(id_usuario=id_usuario, _secrets=secrets)
 
-    if df.empty:
-        st.info("Ainda não há registros de material para este colaborador.")
+    if df_raw.empty:
+        st.info("Ainda não há registros de material para este grupo.")
         return
 
-    html = (
-        df.rename(
-            columns={
-                "tipo_material": "Tipo",
-                "total_recebido": "Total entregue",
-                "restante": "Restante",
-            }
-        )
-        .to_html(index=False, classes="material-summary-table", border=0)
+    # --------------------------------------------------------------
+    # 2️⃣ Salvar cópia original em session_state (para comparar mudanças)
+    # --------------------------------------------------------------
+    state_key = f"_material_original_{id_usuario}"
+    if state_key not in st.session_state:
+        st.session_state[state_key] = df_raw.copy()
+
+    # --------------------------------------------------------------
+    # 3️⃣ Configurar colunas – somente “total” e “restante” são editáveis
+    # --------------------------------------------------------------
+    col_config = {
+        "tipo_material": st.column_config.TextColumn(disabled=True, label="Tipo"),
+        "quantidade_total": st.column_config.NumberColumn(min_value=0, step=1, label="Total"),
+        "quantidade_restante": st.column_config.NumberColumn(min_value=0, step=1, label="Restante")
+    }
+
+    # --------------------------------------------------------------
+    # 4️⃣ Data editor (Streamlit >= 1.31) – devolve DataFrame editado
+    # --------------------------------------------------------------
+    edited_df = st.experimental_data_editor(
+        df_raw,
+        column_config=col_config,
+        use_container_width=True,
+        num_rows="dynamic",
+        key=f"material_editor_{id_usuario}"
     )
 
-    st.markdown(html, unsafe_allow_html=True)
+    # --------------------------------------------------------------
+    # 5️⃣ Botão de persistência
+    # --------------------------------------------------------------
+    if st.button("💾 Salvar alterações", key=f"save_mat_{id_usuario}"):
+        # Comparar linha‑a‑linha com o original
+        original_df = st.session_state[state_key]
+        sucessos = 0
+        falhas = 0
+
+        for idx, row in edited_df.iterrows():
+            tipo = str(row["tipo_material"]).strip()
+            total_novo = int(row["quantidade_total"])
+            resto_novo = int(row["quantidade_restante"])
+
+            # Verifica se houve mudança
+            if (total_novo != int(original_df.iloc[idx]["quantidade_total"])) or \
+               (resto_novo != int(original_df.iloc[idx]["quantidade_restante"])):
+                ok = fn.atualizar_material_grupo(
+                    id_usuario=str(id_usuario),
+                    tipo_material=tipo,
+                    novo_total=total_novo,
+                    novo_restante=resto_novo,
+                    _secrets=secrets,
+                    error_log=st.session_state.get("error_log")
+                )
+                if ok:
+                    sucessos += 1
+                else:
+                    falhas += 1
+
+        # Atualiza o “original” para refletir o estado salvo
+        st.session_state[state_key] = edited_df.copy()
+
+        if sucessos:
+            st.success(f"{sucessos} registro(s) atualizado(s) com sucesso.")
+        if falhas:
+            st.error(f"{falhas} registro(s) não puderam ser atualizados – verifique o log.")
+
+    # --------------------------------------------------------------
+    # 6️⃣ Exibir separador visual
+    # --------------------------------------------------------------
+    st.markdown("---")
+    st.markdown("**📋 Resumo editável** (clique nas células para alterar)")

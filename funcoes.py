@@ -228,7 +228,7 @@ def registrar_acao(id_usuario, tipo_acao, localizacao, feedback, secrets, error_
     
     Args:
         id_usuario (str): ID único do usuário que realizou a ação.
-        tipo_acao (str): Descrição do tipo de ação realizada (ex: 'Check-in', 'CONCLUIU: MISSÃO').
+        tipo_acao (str): Descrição do tipo de ação (ex: 'Check‑in', 'CONCLUIU: MISSÃO').
         localizacao (str): Coordenadas GPS no formato 'lat,lon' ou string indicando ausência de GPS.
         feedback (str): Texto de feedback ou observação do usuário.
         secrets (dict): Dicionário com as credenciais do Google.
@@ -599,7 +599,7 @@ def carregar_grupos_completos_cached(planilha_id):
     """
     try:
         # Usa URL pública para evitar chamada de API
-        url = f"https://docs.google.com/spreadsheets/d/{planilha_id}/gviz/tq?out:CSV&sheet=Grupos"
+        url = f"https://docs.google.com/spreadsheets/d/{planilha_id}/gviz/tq?out=CSV&sheet=Grupos"
         df = pd.read_csv(url)
 
         # ✅ FILTRA: Exclui linhas que são apenas Macro_Grupos (ID começa com '_MACRO_')
@@ -1111,11 +1111,11 @@ def registrar_material_supervisor(
 @st.cache_data(ttl=120)
 def obter_resumo_materiais(id_usuario: str, _secrets):
     """
-    Gera um DataFrame resumindo, por tipo de material, o total já
-    entregue e a quantidade ainda restante para o usuário informado.
-
-    Estrutura retornada:
-        tipo_material | total_recebido | restante
+    Gera um DataFrame *agregado* de materiais para o usuário/grupo indicado.
+    As colunas retornadas são:
+        - tipo_material
+        - total_recebido
+        - restante
     """
     try:
         client = _get_gspread_client(_secrets)
@@ -1123,23 +1123,127 @@ def obter_resumo_materiais(id_usuario: str, _secrets):
         df = pd.DataFrame(aba.get_all_records())
 
         if df.empty:
-            return df
+            return pd.DataFrame()
 
-        filtro = df['id_usuario'].astype(str) == str(id_usuario)
-        df_user = df[filtro]
+        filtro = df['id_usuario'].astype(str) == str(id_usuario).strip()
+        df_user = df[filtro][['tipo_material',
+                               'quantidade_total' if 'quantidade_total' in df.columns else 'quantidade_recebida',
+                               'quantidade_restante']].copy()
+
+        col_qtd = 'quantidade_total' if 'quantidade_total' in df_user.columns else 'quantidade_recebida'
+        df_user = df_user.rename(columns={col_qtd: 'total_recebido',
+                                          'quantidade_restante': 'restante'})
 
         resumo = (
             df_user
             .groupby('tipo_material')
-            .agg(
-                total_recebido=('quantidade_recebida', 'sum'),
-                restante=('quantidade_restante', 'last')   # último registro = valor atual
-            )
+            .agg(total_recebido=('total_recebido', 'sum'),
+                 restante=('restante', 'last'))
             .reset_index()
         )
         return resumo
     except Exception as e:
-        # Não há `error_log` aqui porque a função costuma ser chamada apenas
-        # por streamlit; ainda assim registramos no console para depuração.
         print(f"Erro ao gerar resumo de materiais: {e}")
         return pd.DataFrame()
+
+
+# -------------------------------------------------------------------------
+# 2️⃣ FUNÇÃO PARA OBTER OS REGISTROS “BRUTOS” DE UM GRUPO
+# -------------------------------------------------------------------------
+def obter_materiais_por_grupo(id_usuario: str, _secrets):
+    """
+    Retorna um DataFrame **não agregado** contendo, para o ``id_usuario`` (grupo),
+    as colunas:
+        - ``tipo_material``
+        - ``quantidade_total``  (coluna “quantidade_total” ou, se ainda não existir, a antiga “quantidade_recebida”)
+        - ``quantidade_restante``
+    
+    Essa função é usada pelo componente de edição, pois permite que o supervisor
+    veja o estoque atual e altere os valores.
+    """
+    try:
+        client = _get_gspread_client(_secrets)
+        aba = client.open_by_key(_secrets["planilha"]["id"]).worksheet("Materiais")
+        df = pd.DataFrame(aba.get_all_records())
+
+        if df.empty:
+            return pd.DataFrame()
+
+        filtro = df['id_usuario'].astype(str) == str(id_usuario).strip()
+        df_grp = df[filtro][['tipo_material',
+                             'quantidade_total' if 'quantidade_total' in df.columns else 'quantidade_recebida',
+                             'quantidade_restante']].copy()
+
+        # Renomeia para garantir nomes consistentes para o frontend
+        col_qtd = 'quantidade_total' if 'quantidade_total' in df_grp.columns else 'quantidade_recebida'
+        df_grp = df_grp.rename(columns={col_qtd: 'quantidade_total'})
+        return df_grp.reset_index(drop=True)
+    except Exception as e:
+        print(f"Erro ao obter materiais por grupo: {e}")
+        return pd.DataFrame()
+
+
+# -------------------------------------------------------------------------
+# 3️⃣ FUNÇÃO DE ATUALIZAÇÃO DE UMA LINHA DE MATERIAL
+# -------------------------------------------------------------------------
+def atualizar_material_grupo(
+        id_usuario: str,
+        tipo_material: str,
+        novo_total: int,
+        novo_restante: int,
+        _secrets,
+        error_log=None) -> bool:
+    """
+    Busca a **última** linha da aba “Materiais” que corresponde ao
+    ``id_usuario`` + ``tipo_material`` e atualiza as colunas
+    ``quantidade_total`` e ``quantidade_restante`` com os novos valores.
+    Se a coluna ``quantidade_total`` ainda não existir (planilha antiga),
+    cria‑a ao atualizar.
+    """
+    try:
+        client = _get_gspread_client(_secrets, error_log)
+        if client is None:
+            return False
+
+        planilha = client.open_by_key(_secrets["planilha"]["id"])
+        aba = planilha.worksheet("Materiais")
+
+        # 1️⃣ Obter cabeçalho e garantir colunas
+        cabecalho = aba.row_values(1)
+        if 'quantidade_total' not in cabecalho:
+            aba.update('A1', cabecalho + ['quantidade_total'])
+            cabecalho.append('quantidade_total')
+        if 'quantidade_restante' not in cabecalho:
+            aba.update('A1', cabecalho + ['quantidade_restante'])
+            cabecalho.append('quantidade_restante')
+
+        col_total = cabecalho.index('quantidade_total') + 1
+        col_rest = cabecalho.index('quantidade_restante') + 1
+
+        # 2️⃣ Procurar a linha que corresponde ao usuário + tipo (última ocorrência)
+        linhas = aba.get_all_records()
+        linha_alvo = None
+        for i, linha in enumerate(linhas, start=2):  # começa na linha 2 (abaixo do cabeçalho)
+            if str(linha.get('id_usuario')).strip() == str(id_usuario).strip() and \
+               str(linha.get('tipo_material')).strip().lower() == str(tipo_material).strip().lower():
+                linha_alvo = i  # guarda sempre a última encontrada
+
+        if linha_alvo is None:
+            # Não encontrou → nada a atualizar
+            return False
+
+        # 3️⃣ Atualizar as duas colunas
+        aba.update_cell(linha_alvo, col_total, int(novo_total))
+        aba.update_cell(linha_alvo, col_rest, int(novo_restante))
+        return True
+    except Exception as e:
+        if error_log is not None:
+            error_log.append({
+                'data': get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),
+                'erro': str(e),
+                'funcao': 'atualizar_material_grupo',
+                'traceback': traceback.format_exc(),
+                'tipo': type(e).__name__
+            })
+        print(f"Erro ao atualizar material: {e}")
+        return False
