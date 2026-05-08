@@ -963,8 +963,8 @@ def atualizar_pontuacao_usuario(
             get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),  # ultima_atualizacao
             novo_pontos_dia,               # pontos_dia
             hoje_str,                      # data_dia
-            acao,                           # tipo_acao
-            ganho                           # pontos_ganhos
+            acao,                          # tipo_acao
+            ganho                          # pontos_ganhos
         ])
 
         # ---------------------------------------------------------
@@ -1007,3 +1007,115 @@ def registrar_acao_com_pontuacao(
         secrets=secrets,
         error_log=error_log
     )
+
+
+# =============================================================================
+# NOVAS FUNÇÕES DE GESTÃO DE MATERIAIS
+# =============================================================================
+
+def registrar_material_supervisor(
+        id_usuario: str,
+        nome_usuario: str,
+        tipo_material: str,
+        qnt_recebida: int,
+        secrets,
+        error_log=None) -> bool:
+    """
+    Registra a entrega/atualização de material para um colaborador.
+    Atualiza a coluna ``quantidade_restante`` com base no registro
+    anterior (subtrai a quantidade recebida; caso queira “reabastecer”,
+    troque a operação para ``+``).
+
+    Retorna ``True`` se a gravação ocorreu sem erro.
+    """
+    try:
+        # 1️⃣ cliente gspread
+        client = _get_gspread_client(secrets, error_log)
+        if client is None:
+            return False
+
+        # 2️⃣ aba “Materiais” (deve existir na planilha)
+        planilha = client.open_by_key(secrets["planilha"]["id"])
+        aba = planilha.worksheet("Materiais")
+
+        # 3️⃣ ler registros já existentes do usuário + tipo
+        dados = aba.get_all_records()
+        linhas_filtradas = [
+            r for r in dados
+            if str(r.get('id_usuario')).strip() == str(id_usuario).strip()
+            and str(r.get('tipo_material')).strip().lower()
+                == str(tipo_material).strip().lower()
+        ]
+
+        # 4️⃣ quantidade_restante anterior (último registro)
+        if linhas_filtradas:
+            ultima = max(linhas_filtradas,
+                         key=lambda r: r.get('data_registro', ''))
+            restante_anterior = int(ultima.get('quantidade_restante', 0))
+        else:
+            restante_anterior = 0
+
+        # 5️⃣ nova quantidade restante – aqui subtraímos (entrega)
+        nova_restante = max(0, restante_anterior - int(qnt_recebida))
+
+        # 6️⃣ inserir nova linha
+        agora = get_agora_br().strftime("%d/%m/%Y %H:%M:%S")
+        aba.append_row([
+            str(id_usuario),
+            str(nome_usuario),
+            agora,
+            str(tipo_material).strip(),
+            int(qnt_recebida),
+            int(nova_restante)
+        ])
+
+        return True
+
+    except Exception as e:
+        if error_log is not None:
+            error_log.append({
+                'data': get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),
+                'erro': str(e),
+                'funcao': 'registrar_material_supervisor',
+                'traceback': traceback.format_exc(),
+                'tipo': type(e).__name__
+            })
+        print(f"Erro ao registrar material: {e}")
+        return False
+
+
+@st.cache_data(ttl=120)
+def obter_resumo_materiais(id_usuario: str, secrets):
+    """
+    Gera um DataFrame resumindo, por tipo de material, o total já
+    entregue e a quantidade ainda restante para o usuário informado.
+
+    Estrutura retornada:
+        tipo_material | total_recebido | restante
+    """
+    try:
+        client = _get_gspread_client(secrets)
+        aba = client.open_by_key(secrets["planilha"]["id"]).worksheet("Materiais")
+        df = pd.DataFrame(aba.get_all_records())
+
+        if df.empty:
+            return df
+
+        filtro = df['id_usuario'].astype(str) == str(id_usuario)
+        df_user = df[filtro]
+
+        resumo = (
+            df_user
+            .groupby('tipo_material')
+            .agg(
+                total_recebido=('quantidade_recebida', 'sum'),
+                restante=('quantidade_restante', 'last')   # último registro = valor atual
+            )
+            .reset_index()
+        )
+        return resumo
+    except Exception as e:
+        # Não há `error_log` aqui porque a função costuma ser chamada apenas
+        # por streamlit; ainda assim registramos no console para depuração.
+        print(f"Erro ao gerar resumo de materiais: {e}")
+        return pd.DataFrame()
