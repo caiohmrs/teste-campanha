@@ -11,7 +11,6 @@ import streamlit as st
 import urllib.parse
 from typing import List, Dict, Any
 from utils.gamification import ACTION_LABELS   # ← novo import
-from utils import funcoes as fn   # ← import das funções de backend (registrar material, resumo, etc.)
 
 def render_login_header():
     """Renderiza o cabeçalho da tela de login."""
@@ -448,7 +447,7 @@ def render_material_form(colaboradores: list, tipos_material: list, secrets) -> 
         submit = st.form_submit_button("Registrar entrega")
 
         if submit:
-            ok = fn.registrar_material_supervisor(
+            ok = registrar_material_supervisor(
                 id_usuario=uid_sel,
                 nome_usuario=nome_sel,
                 tipo_material=tipo_sel,
@@ -473,7 +472,7 @@ def render_material_summary(id_usuario: str, secrets) -> None:
     """
     import streamlit as st
 
-    df = fn.obter_resumo_materiais(id_usuario=id_usuario, secrets=secrets)
+    df = obter_resumo_materiais(id_usuario=id_usuario, secrets=secrets)
 
     if df.empty:
         st.info("Ainda não há registros de material para este colaborador.")
