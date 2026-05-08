@@ -854,9 +854,69 @@ def get_css():
             transition: width 0.4s ease;
         }}
 
+        /* --------------------------------------------------------------
+           33. CARD DE FORMULÁRIO DE MATERIAIS (usado pelo SUPERVISOR)
+           -------------------------------------------------------------- */
+        .material-card {{
+            background-color: var(--cor-branco);
+            border: 4px solid var(--cor-texto);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: var(--sombra-offset-x) var(--sombra-offset-y) var(--sombra-blur) var(--cor-texto) !important;
+        }}
+
+        .material-card h3 {{
+            margin: 0 0 12px 0;
+            font-family: var(--fonte-titulo);
+            font-size: 1.4rem;
+            color: var(--cor-secundaria);
+            text-transform: uppercase;
+            text-align: center;
+        }}
+
+        .material-card .stSelectbox,
+        .material-card .stNumberInput,
+        .material-card .stButton {{
+            margin-bottom: 12px !important;
+        }}
+
+        /* --------------------------------------------------------------
+           34. TABELA DE RESUMO DE MATERIAIS
+           -------------------------------------------------------------- */
+        .material-summary-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }}
+
+        .material-summary-table th,
+        .material-summary-table td {{
+            border: 2px solid var(--cor-texto);
+            padding: 8px 12px;
+            text-align: center;
+            font-family: var(--fonte-texto);
+        }}
+
+        .material-summary-table th {{
+            background-color: var(--cor-primaria);
+            color: var(--cor-texto);
+            font-weight: bold;
+            text-transform: uppercase;
+        }}
+
+        .material-summary-table td {{
+            background-color: var(--cor-branco);
+            color: var(--cor-texto);
+        }}
+
+        .material-summary-table .restante {{
+            font-weight: bold;
+            color: var(--cor-secundaria);
+        }}
+
     </style>
     """
-
 
 def inject_styles():
     """
