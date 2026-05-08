@@ -460,7 +460,7 @@ def render_material_summary(id_usuario: str, secrets) -> None:
     As alterações são salvas na aba “Materiais” ao clicar em “Salvar alterações”.
     """
     # --------------------------------------------------------------
-    # 1️⃣ Carregar os registros “brutos” (um linha por tipo)
+    # 1️⃣ Carregar os registros “brutos” (uma linha por tipo)
     # --------------------------------------------------------------
     df_raw = fn.obter_materiais_por_grupo(id_usuario=id_usuario, _secrets=secrets)
 
@@ -485,18 +485,13 @@ def render_material_summary(id_usuario: str, secrets) -> None:
     }
 
     # --------------------------------------------------------------
-    # 4️⃣ Data‑editor (tenta usar a API nativa do Streamlit)
-    # --------------------------------------------------------------
-    # Streamlit ≥ 1.22 tem ``st.experimental_data_editor`` (beta).
-    # Streamlit ≥ 1.28 tem ``st.data_editor`` (estável).
-    # Se a versão instalada não possui nenhuma delas, usamos
-    # um fallback manual (um formulário linha‑a‑linha).
+    # 4️⃣ Data‑editor (usa width='stretch' em vez de use_container_width)
     # --------------------------------------------------------------
     if hasattr(st, "data_editor"):                     # API estável
         edited_df = st.data_editor(
             df_raw,
             column_config=col_config,
-            use_container_width=True,
+            width='stretch',
             num_rows="dynamic",
             key=f"material_editor_{id_usuario}"
         )
@@ -504,7 +499,7 @@ def render_material_summary(id_usuario: str, secrets) -> None:
         edited_df = st.experimental_data_editor(
             df_raw,
             column_config=col_config,
-            use_container_width=True,
+            width='stretch',
             num_rows="dynamic",
             key=f"material_editor_{id_usuario}"
         )
@@ -546,12 +541,13 @@ def render_material_summary(id_usuario: str, secrets) -> None:
 
         for idx, row in edited_df.iterrows():
             tipo = str(row["tipo_material"]).strip()
-            total_novo = int(row["quantidade_total"])
-            resto_novo = int(row["quantidade_restante"])
+            total_novo = int(row["quantidade_total"] or 0)
+            resto_novo = int(row["quantidade_restante"] or 0)
 
             # Verifica se houve mudança
-            if (total_novo != int(original_df.iloc[idx]["quantidade_total"])) or \
-               (resto_novo != int(original_df.iloc[idx]["quantidade_restante"])):
+            orig_total = original_df.iloc[idx].get("quantidade_total") or 0
+            orig_rest = original_df.iloc[idx].get("quantidade_restante") or 0
+            if (total_novo != int(orig_total)) or (resto_novo != int(orig_rest)):
                 ok = fn.atualizar_material_grupo(
                     id_usuario=str(id_usuario),
                     tipo_material=tipo,

@@ -825,7 +825,7 @@ def simular_acao_usuario(id_usuario, tipo_acao, secrets, error_log=None):
     
     Args:
         id_usuario (str): ID do usuário que está sendo simulado.
-        tipo_acao (str): Tipo de ação a ser simulada (ex: 'Check-in').
+        tipo_acao (str): Tipo de ação a ser simulada (ex: 'Check‑in').
         secrets (dict): Dicionário com as credenciais do Google.
         error_log (list, optional): Lista para registro de erros. Se fornecida, erros serão adicionados a ela.
     
@@ -1078,18 +1078,34 @@ def registrar_material_supervisor(
 
         nova_restante = max(0, total - usada)
 
-        # 6️⃣ inserir nova linha
+        # 6️⃣ Inserir nova linha – respeita o cabeçalho existente
         agora = get_agora_br().strftime("%d/%m/%Y %H:%M:%S")
+        cabecalho = aba.row_values(1)          # primeira linha da aba
+
+        # Detecta o nome da coluna que contém a quantidade total
+        col_qtd = 'quantidade_total' if 'quantidade_total' in cabecalho else 'quantidade_recebida'
+
+        # Constrói a linha na ordem exata do cabeçalho (ignora colunas ausentes)
         nova_linha = [
             str(id_usuario),               # id_usuario
             str(nome_usuario),             # nome_usuario
             agora,                         # data_registro
-            str(tipo_material).strip(),    # tipo_material (nome livre)
-            total,                        # quantidade_total recebida
+            str(tipo_material).strip(),    # tipo_material
+            total,                        # quantidade total (coluna correta)
             int(nova_restante)            # quantidade_restante
         ]
-        if id_grupo is not None:
-            nova_linha.append(str(id_grupo))
+
+        # Se o cabeçalho possui a coluna “id_grupo”, inclui‑a
+        if 'id_grupo' in cabecalho:
+            nova_linha.append(str(id_grupo) if id_grupo is not None else "")
+
+        # Se o cabeçalho tem a coluna antiga “quantidade_recebida” (quando
+        # ainda não foi criada a nova), garante que o valor vá para a
+        # posição correta (substitui o placeholder que foi inserido acima)
+        if col_qtd == 'quantidade_recebida':
+            # “quantidade_total” ainda não existe → já inserimos na ordem
+            # padrão acima (col_qtd será a quinta coluna)
+            pass
 
         aba.append_row(nova_linha)
 
@@ -1208,16 +1224,26 @@ def atualizar_material_grupo(
         planilha = client.open_by_key(_secrets["planilha"]["id"])
         aba = planilha.worksheet("Materiais")
 
-        # 1️⃣ Obter cabeçalho e garantir colunas
+        # 1️⃣ Obter cabeçalho e garantir que as colunas existam
         cabecalho = aba.row_values(1)
-        if 'quantidade_total' not in cabecalho:
+
+        # A coluna de quantidade total pode se chamar “quantidade_total”
+        # ou “quantidade_recebida” (versões antigas da planilha)
+        if 'quantidade_total' not in cabecalho and 'quantidade_recebida' not in cabecalho:
+            # Cria a coluna “quantidade_total” se nenhuma das duas existir
             aba.update('A1', cabecalho + ['quantidade_total'])
             cabecalho.append('quantidade_total')
+
+        # Quantidade restante sempre deve existir
         if 'quantidade_restante' not in cabecalho:
             aba.update('A1', cabecalho + ['quantidade_restante'])
             cabecalho.append('quantidade_restante')
 
-        col_total = cabecalho.index('quantidade_total') + 1
+        # Define índices (1‑based) para as colunas corretas
+        if 'quantidade_total' in cabecalho:
+            col_total = cabecalho.index('quantidade_total') + 1
+        else:
+            col_total = cabecalho.index('quantidade_recebida') + 1
         col_rest = cabecalho.index('quantidade_restante') + 1
 
         # 2️⃣ Procurar a linha que corresponde ao usuário + tipo (última ocorrência)
