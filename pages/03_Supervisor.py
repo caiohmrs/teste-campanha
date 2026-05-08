@@ -489,12 +489,13 @@ if cargo_limpo == "supervisor":
             # --------------------------------------------------------------
             #  CONTROLE DE MATERIAIS + RESUMO (agora dentro de um **expander**)
             # --------------------------------------------------------------
-            with st.expander("📦 Controle de Materiais e Nível de Estoque", expanded=True):
-                st.subheader("📦 Controle de Materiais da Equipe")
+            with st.expander("📦 Controle de Materiais e Nível de Estoque", expanded=False):
+                st.subheader("Controle de Recebimento de Materiais")
                 # Formulário para **adição** de material
                 render_material_form(st.secrets)          # <-- CHAMADA ATUALIZADA
 
                 st.markdown("---")
+                st.subheader("Controle de Estoque de Materiais")
 
                 # ------------------------------------------------------
                 #  Resumo dos materiais já registrados (por grupo)
