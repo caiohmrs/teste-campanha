@@ -11,6 +11,7 @@ import streamlit as st
 import urllib.parse
 from typing import List, Dict, Any
 from utils.gamification import ACTION_LABELS   # ← novo import
+from utils import funcoes as fn   # ← import das funções de backend (registrar material, resumo, etc.)
 
 def render_login_header():
     """Renderiza o cabeçalho da tela de login."""
@@ -403,3 +404,91 @@ def render_info_ranking(titulo: str, mensagem: str) -> None:
             <p>{mensagem}</p>
         </div>
     ''', unsafe_allow_html=True)
+
+
+# ----------------------------------------------------------------------
+# NOVOS COMPONENTES – REGISTRO E RESUMO DE MATERIAIS
+# ----------------------------------------------------------------------
+def render_material_form(colaboradores: list, tipos_material: list, secrets) -> None:
+    """
+    Exibe um card com formulário para o supervisor registrar a entrega/atualização
+    de material.
+
+    Args:
+        colaboradores – lista de tuplas [(id, nome), …] obtidas da aba “Equipe”.
+        tipos_material – lista de strings com os tipos disponíveis (ex.: “Água”, “Máscara”).
+        secrets – dicionário de credenciais do Streamlit (necessário para chamar
+                  ``fn.registrar_material_supervisor``).
+    """
+    import streamlit as st
+
+    # --------------------------------------------------------------
+    # CARD (classe .material-card) que envolve todo o formulário
+    # --------------------------------------------------------------
+    st.markdown(
+        '<div class="material-card"><h3>📦 Registro de Material</h3></div>',
+        unsafe_allow_html=True,
+    )
+
+    with st.form(key="form_material", clear_on_submit=True):
+        # ----------- Seleção do colaborador ---------------------------------
+        opcoes = [f"{uid} - {nome}" for uid, nome in colaboradores]
+        escolha = st.selectbox("Colaborador", opcoes, key="colab_sel")
+        uid_sel, nome_sel = escolha.split(" - ", 1)
+
+        # ----------- Tipo de material --------------------------------------
+        tipo_sel = st.selectbox("Tipo de material", tipos_material, key="tipo_sel")
+
+        # ----------- Quantidade recebida -----------------------------------
+        qnt = st.number_input(
+            "Quantidade entregue", min_value=1, step=1, key="qnt_input"
+        )
+
+        # ----------- Botão de submissão ------------------------------------
+        submit = st.form_submit_button("Registrar entrega")
+
+        if submit:
+            ok = fn.registrar_material_supervisor(
+                id_usuario=uid_sel,
+                nome_usuario=nome_sel,
+                tipo_material=tipo_sel,
+                qnt_recebida=int(qnt),
+                secrets=secrets,
+                error_log=st.session_state.get("error_log"),
+            )
+            if ok:
+                st.success("Entrega registrada com sucesso!")
+            else:
+                st.error("Falha ao registrar. Consulte os logs.")
+
+
+def render_material_summary(id_usuario: str, secrets) -> None:
+    """
+    Renderiza a tabela de resumo de materiais para o usuário indicado.
+    Utiliza a classe ``.material-summary-table`` definida em utils/styles.py.
+
+    Args:
+        id_usuario – ID do colaborador cujo resumo será exibido.
+        secrets – dicionário de credenciais (necessário para ``fn.obter_resumo_materiais``).
+    """
+    import streamlit as st
+
+    df = fn.obter_resumo_materiais(id_usuario=id_usuario, secrets=secrets)
+
+    if df.empty:
+        st.info("Ainda não há registros de material para este colaborador.")
+        return
+
+    # Converte o DataFrame para HTML aplicando a classe CSS da tabela
+    html = (
+        df.rename(
+            columns={
+                "tipo_material": "Tipo",
+                "total_recebido": "Total entregue",
+                "restante": "Restante",
+            }
+        )
+        .to_html(index=False, classes="material-summary-table", border=0)
+    )
+
+    st.markdown(html, unsafe_allow_html=True)
