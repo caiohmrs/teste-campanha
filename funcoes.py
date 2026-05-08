@@ -265,6 +265,7 @@ def registrar_acao(id_usuario, tipo_acao, localizacao, feedback, secrets, error_
             str(feedback)
         ])
 
+        # Normalização da ação para pontuação
         acao_normalizada = None
         a = tipo_acao.lower()
         if "check-in" in a:
@@ -1017,23 +1018,24 @@ def registrar_material_supervisor(
         id_usuario: str,
         nome_usuario: str,
         tipo_material: str,
-        qnt_recebida: int,
+        qnt_total: int,          # ← quantidade **total** que o grupo recebeu
+        qnt_usada: int,          # ← quantidade **já utilizada**
         secrets,
         id_grupo: str | None = None,
         error_log=None) -> bool:
     """
-    Registra a entrega/atualização de material para um colaborador.
-    Atualiza a coluna ``quantidade_restante`` com base no registro
-    anterior (subtrai a quantidade recebida; caso queira “reabastecer”,
-    troque a operação para ``+``).
+    Registra a entrega/atualização de material para um colaborador ou grupo.
+    Atualiza a coluna ``quantidade_restante`` com base no total recebido
+    e na quantidade já utilizada (total - usada).
 
     Params:
-        id_usuario (str): Identificador do colaborador.
-        nome_usuario (str): Nome do colaborador.
+        id_usuario (str): Identificador do colaborador ou do grupo.
+        nome_usuario (str): Nome do colaborador ou do grupo.
         tipo_material (str): Nome do material (ex.: “Água”, “Máscara”).
-        qnt_recebida (int): Quantidade entregue nesta operação.
+        qnt_total (int): Quantidade total recebida neste registro.
+        qnt_usada (int): Quantidade já utilizada (ou seja, que já saiu do estoque).
         secrets (dict): Credenciais do Google.
-        id_grupo (str | None): Identificador do grupo ao qual o supervisor pertence (opcional).
+        id_grupo (str | None): Identificador do grupo (opcional).
         error_log (list, optional): Lista de erros.
 
     Returns:
@@ -1066,8 +1068,15 @@ def registrar_material_supervisor(
         else:
             restante_anterior = 0
 
-        # 5️⃣ nova quantidade restante – aqui subtraímos (entrega)
-        nova_restante = max(0, restante_anterior - int(qnt_recebida))
+        # 5️⃣ nova quantidade restante – calculamos a partir do total e da usada
+        try:
+            total = int(qnt_total)
+            usada = int(qnt_usada)
+        except Exception:
+            total = int(qnt_total) if isinstance(qnt_total, (int, float, str)) else 0
+            usada = int(qnt_usada) if isinstance(qnt_usada, (int, float, str)) else 0
+
+        nova_restante = max(0, total - usada)
 
         # 6️⃣ inserir nova linha
         agora = get_agora_br().strftime("%d/%m/%Y %H:%M:%S")
@@ -1076,8 +1085,8 @@ def registrar_material_supervisor(
             str(nome_usuario),             # nome_usuario
             agora,                         # data_registro
             str(tipo_material).strip(),    # tipo_material (nome livre)
-            int(qnt_recebida),             # quantidade_recebida
-            int(nova_restante)             # quantidade_restante
+            total,                        # quantidade_total recebida
+            int(nova_restante)            # quantidade_restante
         ]
         if id_grupo is not None:
             nova_linha.append(str(id_grupo))

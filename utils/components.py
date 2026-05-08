@@ -294,36 +294,24 @@ def render_action_progress(actions: List[Dict[str, Any]]) -> None:
     ```
     """
     for a in actions:
-        # ----- Nome da ação -------------------------------------------------
-        # Tenta as duas possíveis chaves e garante string vazia como fallback
         raw_label = a.get("label") or a.get("nome") or ""
-        # normaliza para chave do dicionário (lowercase, sem espaços)
         chave_normalizada = raw_label.lower().replace(' ', '_')
         label = ACTION_LABELS.get(chave_normalizada,
                                  raw_label.replace('_', ' ').title())
 
-        # ----- Quantidade já feita hoje --------------------------------------
         progresso = a.get("progresso") if a.get("progresso") is not None else a.get("feitas", 0)
-
-        # ----- Limite diário -------------------------------------------------
-        limite = a.get("limite")  # pode ser None (ilimitado)
-
-        # ----- Pontos ganhos (opcional) --------------------------------------
+        limite = a.get("limite")
         pontos = a.get("pontos")
 
-        # ----- Texto de progresso (ex.: “3 / 5” ou “2 / ∞”) --------------------
         if limite is None:
             progresso_txt = f"{int(progresso)} / ∞"
-            pct = 0  # barra oculta quando ilimitado
+            pct = 0
         else:
             progresso_txt = f"{int(progresso)} / {int(limite)}"
-            # Evita divisão por zero – mesmo que limite fosse 0 (não esperado)
-            pct = (float(progresso) / float(limite)) * 100 if limite else 0
+            pct = (float(progresso) / float(limite)) * 100) if limite else 0
 
-        # ----- Badge de pontos (ex.: “+10 pts”) ----------------------------
         badge_pts = render_points_badge(pontos) if pontos is not None else ""
 
-        # ----- Montar o HTML ------------------------------------------------
         st.markdown(f'''
             <div class="action-progress-card">
                 <div class="action-progress-row">
@@ -358,16 +346,12 @@ def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
         st.info("Nenhum dado de ranking disponível.")
         return
 
-    # Header do card
     st.space("small")
     st.markdown('<div class="leaderboard-header">Classificação e Pontuação</div>', unsafe_allow_html=True)
 
-    # Linhas individuais
     for linha in ranking:
         pos = linha.get("posicao")
-        # Correção: uso da variável correta
         nome = linha.get("nome", "")
-
         pts = linha.get("pontos", 0)
         ganho = linha.get("ganho")
 
@@ -417,53 +401,50 @@ def render_material_form(secrets) -> None:
 
     Não é necessário escolher um colaborador individual; o supervisor
     informa apenas:
-        • nome do material (texto livre)
-        • quantidade entregue
+        • tipo do material (texto livre)
+        • quantidade total recebida
+        • quantidade já utilizada (ou seja, que já saiu do estoque)
     O componente captura automaticamente o ``ID_Grupo`` do supervisor que está
     logado e o envia para ``fn.registrar_material_supervisor`` (campo
-    ``id_grupo`` da função backend).  O ``id_usuario`` armazenado na planilha
-    será o próprio ``ID_Grupo`` para que a aba “Materiais” possa agrupar por
-    grupo.
+    ``id_grupo`` da função backend).  O ``qnt_total`` e o ``qnt_usada``
+    são gravados nas colunas “quantidade_total” e “quantidade_restante”.
     """
-    # --------------------------------------------------------------
-    # CARD (classe .material-card) que envolve todo o formulário
-    # --------------------------------------------------------------
     st.markdown(
         '<div class="material-card"><h3>📦 Registro de Material (Grupo)</h3></div>',
         unsafe_allow_html=True,
     )
 
     with st.form(key="form_material_grupo", clear_on_submit=True):
-        # ----------- Tipo de material (texto livre) -------------------------
         tipo_sel = st.text_input(
             "Tipo de material (ex.: “Água”, “Máscara”, “Kit de primeiros socorros”)",
             key="tipo_input"
         )
 
-        # ----------- Quantidade entregue -----------------------------------
-        qnt = st.number_input(
-            "Quantidade entregue", min_value=1, step=1, key="qnt_input"
+        total_qnt = st.number_input(
+            "Quantidade TOTAL recebida", min_value=0, step=1, key="total_input"
         )
 
-        # ----------- Identificar o grupo do supervisor -----------------------
+        usada_qnt = st.number_input(
+            "Quantidade já USADA (ou seja, que já saiu do estoque)",
+            min_value=0, step=1, key="usada_input"
+        )
+
         supervisor = st.session_state.get("usuario_logado", {})
         id_grupo = supervisor.get("ID_Grupo")            # pode ser None
         nome_grupo = supervisor.get("Nome_Grupo") or f"Grupo {id_grupo}"
 
-        # ----------- Botão de submissão ------------------------------------
         submit = st.form_submit_button("Registrar entrega")
 
         if submit:
-            # Como não temos um colaborador individual, usamos o ID do grupo
-            # como ``id_usuario`` e o nome do grupo como ``nome_usuario``.
             ok = fn.registrar_material_supervisor(
                 id_usuario=str(id_grupo) if id_grupo is not None else "DESCONHECIDO",
                 nome_usuario=str(nome_grupo),
                 tipo_material=tipo_sel.strip(),
-                qnt_recebida=int(qnt),
+                qnt_total=int(total_qnt),
+                qnt_usada=int(usada_qnt),
                 id_grupo=id_grupo,            # opcional – será gravado na coluna “grupo_id”
                 secrets=secrets,
-                error_log=st.session_state.get("error_log"),
+                error_log=st.session_state.get('error_log'),
             )
             if ok:
                 st.success("Entrega registrada com sucesso!")
@@ -486,7 +467,6 @@ def render_material_summary(id_usuario: str, secrets) -> None:
         st.info("Ainda não há registros de material para este colaborador.")
         return
 
-    # Converte o DataFrame para HTML aplicando a classe CSS da tabela
     html = (
         df.rename(
             columns={
