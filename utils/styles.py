@@ -125,7 +125,7 @@ def get_css():
 
         /* 4. BOTÕES */
         .stButton > button, 
-        div[data-testid="stPopover"] > button {{
+        div[data-baseweb="popover"] > button {{
             background-color: var(--cor-secundaria) !important;
             color: var(--cor-branco) !important;
             font-family: var(--fonte-titulo) !important;
@@ -913,6 +913,41 @@ def get_css():
         .material-summary-table .restante {{
             font-weight: bold;
             color: var(--cor-secundaria);
+        }}
+
+        /* --------------------------------------------------------------
+           35. BOTÕES PERSONALIZADOS DO MÓDULO DE MATERIAIS
+           -------------------------------------------------------------- */
+        /* Botões dentro do card de registro (usar .material-card button) */
+        .material-card button {{
+            background-color: var(--cor-secundaria) !important;
+            color: var(--cor-branco) !important;
+            border: var(--borda-largura) var(--borda-estilo) var(--cor-texto) !important;
+            border-radius: var(--border-radius) !important;
+            padding: 0.45rem 0.9rem !important;
+            font-family: var(--fonte-titulo) !important;
+            font-size: 0.9rem !important;
+            text-transform: uppercase !important;
+            cursor: pointer;
+        }}
+
+        /* Botões “Salvar nível” que aparecem abaixo da tabela de resumo */
+        .material-summary-table button,
+        .material-save-btn {{
+            background-color: var(--cor-secundaria) !important;
+            color: var(--cor-branco) !important;
+            border: var(--borda-largura) var(--borda-estilo) var(--cor-texto) !important;
+            border-radius: var(--border-radius) !important;
+            padding: 0.35rem 0.7rem !important;
+            font-family: var(--fonte-titulo) !important;
+            font-size: 0.85rem !important;
+            text-transform: uppercase !important;
+            cursor: pointer;
+        }}
+
+        /* Ajuste visual para os selects de nível dentro da tabela */
+        .material-summary-table .stSelectbox {{
+            margin-bottom: 6px !important;
         }}
 
     </style>
