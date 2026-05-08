@@ -1056,9 +1056,9 @@ def registrar_material_supervisor(
 
         # 3️⃣ Conversão de nível → quantidade (valor fixo)
         NIVEL_PARA_QUANTIDADE = {
-            "Pouco":   5,
-            "Médio":  15,
-            "Muito": 30,
+            "Pouco":   100,
+            "Médio":  500,
+            "Muito": 1000,
             "Acabou": 0
         }
         total = NIVEL_PARA_QUANTIDADE.get(str(nivel_material).strip().title(), 0)

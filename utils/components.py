@@ -411,11 +411,6 @@ def render_material_form(secrets) -> None:
     são gravados nas colunas “quantidade_total”, ``quantidade_restante`` e
     ``nivel_material``.
     """
-    st.markdown(
-        '<div class="material-card"><h3>📦 Registro de Material (Grupo)</h3></div>',
-        unsafe_allow_html=True,
-    )
-
     with st.form(key="form_material_grupo", clear_on_submit=True):
         # --------‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑-
         tipo_sel = st.text_input(
