@@ -514,17 +514,18 @@ if cargo_limpo == "supervisor":
             if "data_analise" not in st.session_state:
                 st.session_state["data_analise"] = datetime.now(timezone.utc) - timedelta(hours=3)
 
+            st.space("xsmall")
             # 2️⃣ Título de status da equipe (usa a data já armazenada)
             d_str = st.session_state["data_analise"].strftime("%d/%m/%Y")
             st.markdown(f'''
-                <h3 style="font-size: 1.1rem; text-align: left; margin-top: -15px;
+                <h3 style="font-size: 1.1rem; text-align: center; margin-top: -15px;
                            font-family: 'Archivo Black', sans-serif; color: var(--cor-texto);">
                     📋 STATUS DA EQUIPE ({d_str[:5]})
                 </h3>
                 ''', unsafe_allow_html=True)
 
             # 3️⃣ Widget de seleção de data (aparece **após** o título)
-            c_data, _ = st.columns([1.5, 1])
+            c_data, _ = st.columns([1.1, 1])
             with c_data:
                 nova_data = st.date_input("📅 DATA DE ANÁLISE",
                                           value=st.session_state["data_analise"])
