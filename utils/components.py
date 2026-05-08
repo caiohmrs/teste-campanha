@@ -323,7 +323,7 @@ def render_action_progress(actions: List[Dict[str, Any]]) -> None:
         # ----- Badge de pontos (ex.: “+10 pts”) ----------------------------
         badge_pts = render_points_badge(pontos) if pontos is not None else ""
 
-        # ----- Montar o HTML --------------------------------------------------
+        # ----- Montar o HTML ------------------------------------------------
         st.markdown(f'''
             <div class="action-progress-card">
                 <div class="action-progress-row">
@@ -365,6 +365,8 @@ def render_leaderboard(ranking: List[Dict[str, Any]]) -> None:
     # Linhas individuais
     for linha in ranking:
         pos = linha.get("posicao")
+        nome = line
+
         nome = linha.get("nome", "")
         pts = linha.get("pontos", 0)
         ganho = linha.get("ganho")
@@ -409,31 +411,30 @@ def render_info_ranking(titulo: str, mensagem: str) -> None:
 # ----------------------------------------------------------------------
 # NOVOS COMPONENTES – REGISTRO E RESUMO DE MATERIAIS
 # ----------------------------------------------------------------------
-def render_material_form(colaboradores: list, secrets) -> None:
+def render_material_form(secrets) -> None:
     """
-    Exibe um card com formulário para o supervisor registrar a entrega/atualização
-    de material.
+    Exibe um card com formulário **para registrar material a nível de grupo**.
 
-    Args:
-        colaboradores – lista de tuplas [(id, nome), …] obtidas da aba “Equipe”.
-        secrets – dicionário de credenciais do Streamlit (necessário para chamar
-                  ``fn.registrar_material_supervisor``).
+    Não é necessário escolher um colaborador individual; o supervisor
+    informa apenas:
+        • nome do material (texto livre)
+        • quantidade entregue
+    O componente captura automaticamente o ``ID_Grupo`` do supervisor que está
+    logado e o envia para ``fn.registrar_material_supervisor`` (campo
+    ``id_grupo`` da função backend).  O ``id_usuario`` armazenado na planilha
+    será o próprio ``ID_Grupo`` para que a aba “Materiais” possa agrupar por
+    grupo.
     """
     # --------------------------------------------------------------
     # CARD (classe .material-card) que envolve todo o formulário
     # --------------------------------------------------------------
     st.markdown(
-        '<div class="material-card"><h3>📦 Registro de Material</h3></div>',
+        '<div class="material-card"><h3>📦 Registro de Material (Grupo)</h3></div>',
         unsafe_allow_html=True,
     )
 
-    with st.form(key="form_material", clear_on_submit=True):
-        # ----------- Seleção do colaborador ---------------------------------
-        opcoes = [f"{uid} - {nome}" for uid, nome in colaboradores]
-        escolha = st.selectbox("Colaborador", opcoes, key="colab_sel")
-        uid_sel, nome_sel = escolha.split(" - ", 1)
-
-        # ----------- Tipo de material livre ---------------------------------
+    with st.form(key="form_material_grupo", clear_on_submit=True):
+        # ----------- Tipo de material (texto livre) -------------------------
         tipo_sel = st.text_input(
             "Tipo de material (ex.: “Água”, “Máscara”, “Kit de primeiros socorros”)",
             key="tipo_input"
@@ -444,20 +445,23 @@ def render_material_form(colaboradores: list, secrets) -> None:
             "Quantidade entregue", min_value=1, step=1, key="qnt_input"
         )
 
-        # ----------- Identificar o grupo do supervisor --------------------
+        # ----------- Identificar o grupo do supervisor -----------------------
         supervisor = st.session_state.get("usuario_logado", {})
-        id_grupo = supervisor.get("ID_Grupo")  # pode ser None
+        id_grupo = supervisor.get("ID_Grupo")            # pode ser None
+        nome_grupo = supervisor.get("Nome_Grupo") or f"Grupo {id_grupo}"
 
         # ----------- Botão de submissão ------------------------------------
         submit = st.form_submit_button("Registrar entrega")
 
         if submit:
+            # Como não temos um colaborador individual, usamos o ID do grupo
+            # como ``id_usuario`` e o nome do grupo como ``nome_usuario``.
             ok = fn.registrar_material_supervisor(
-                id_usuario=uid_sel,
-                nome_usuario=nome_sel,
+                id_usuario=str(id_grupo) if id_grupo is not None else "DESCONHECIDO",
+                nome_usuario=str(nome_grupo),
                 tipo_material=tipo_sel.strip(),
                 qnt_recebida=int(qnt),
-                id_grupo=id_grupo,            # passa opcionalmente o ID do grupo
+                id_grupo=id_grupo,            # opcional – será gravado na coluna “grupo_id”
                 secrets=secrets,
                 error_log=st.session_state.get("error_log"),
             )

@@ -64,6 +64,7 @@ from utils.components import (
     render_action_progress,
     render_info_ranking,
     render_material_form,          # <-- INCLUIR AQUI
+    render_material_summary,
 )
 
 # ← novos imports de gamificação
@@ -488,7 +489,7 @@ if cargo_limpo == "supervisor":
             ]
 
             st.subheader("📦 Controle de Materiais da Equipe")
-            render_material_form(colaboradores, tipos_material, st.secrets)
+            render_material_form(st.secrets)          # <-- CHAMADA ATUALIZADA
             st.markdown("---")
             # --------------------------------
 
@@ -517,7 +518,7 @@ if cargo_limpo == "supervisor":
                 ]
                 tem_in = not logs_vol[logs_vol['Tipo_Acao'].str.contains("Check-in")].empty
                 tem_net = not logs_vol[logs_vol['Tipo_Acao'].str.contains("AÇÃO:")].empty
-                tem_ok = not logs_vol[logs_vol['Tipo_Acao'].str.contains("CONCLUIU:")].empty
+                tem_ok = not logs_vol[logs_vol['Tipo_Acao'].str.contains("CONCLUIR:")].empty
 
                 if tem_in and tem_ok:
                     label = "🔥 COMPLETO"
