@@ -183,7 +183,7 @@ def _get_gspread_client(secrets, error_log=None):
             error_log.append({
                 'data': get_agora_br().strftime("%d/%m/%Y %H:%M:%S"),
                 'erro': str(e),
-                'funcao': '_get_gspread_client',
+                'funcao': '_gspread_client',
                 'traceback': traceback.format_exc(),
                 'tipo': type(e).__name__
             })
@@ -1109,7 +1109,7 @@ def registrar_material_supervisor(
 
 
 @st.cache_data(ttl=120)
-def obter_resumo_materiais(id_usuario: str, secrets):
+def obter_resumo_materiais(id_usuario: str, _secrets):
     """
     Gera um DataFrame resumindo, por tipo de material, o total já
     entregue e a quantidade ainda restante para o usuário informado.
@@ -1118,8 +1118,8 @@ def obter_resumo_materiais(id_usuario: str, secrets):
         tipo_material | total_recebido | restante
     """
     try:
-        client = _get_gspread_client(secrets)
-        aba = client.open_by_key(secrets["planilha"]["id"]).worksheet("Materiais")
+        client = _get_gspread_client(_secrets)
+        aba = client.open_by_key(_secrets["planilha"]["id"]).worksheet("Materiais")
         df = pd.DataFrame(aba.get_all_records())
 
         if df.empty:

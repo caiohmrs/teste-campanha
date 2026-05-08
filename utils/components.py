@@ -461,7 +461,7 @@ def render_material_summary(id_usuario: str, secrets) -> None:
         id_usuario – ID do colaborador cujo resumo será exibido.
         secrets – dicionário de credenciais (necessário para ``fn.obter_resumo_materiais``).
     """
-    df = fn.obter_resumo_materiais(id_usuario=id_usuario, secrets=secrets)
+    df = fn.obter_resumo_materiais(id_usuario=id_usuario, _secrets=secrets)
 
     if df.empty:
         st.info("Ainda não há registros de material para este colaborador.")
