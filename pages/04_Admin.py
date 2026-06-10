@@ -108,14 +108,17 @@ with st.sidebar:
             st.rerun()
 
     if st.button("Sair / Trocar Conta", width='stretch'):
-        # ---- RESETEAR ESTADO DE SESSÃO -------------------------------------------
+        # Limpa credenciais Google OAuth
+        st.session_state.pop("google_credentials", None)
+
+        # ---- RESETEAR ESTADO DE SESSAO -------------------------------------------
         # Remove todas as chaves existentes
         for _k in list(st.session_state.keys()):
             del st.session_state[_k]
 
-            # Garante que as chaves essenciais existam após o logout
+            # Garante que as chaves essenciais existam apos o logout
         st.session_state["usuario_logado"] = None  # evita KeyError
-        st.session_state["error_log"] = []  # mantém estrutura de log
+        st.session_state["error_log"] = []  # mantem estrutura de log
         st.session_state["mensagem_exibida"] = False
 
         # Limpa cache de dados

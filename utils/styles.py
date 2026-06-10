@@ -125,7 +125,7 @@ def get_css():
         }}
 
         /* 4. BOTÕES */
-        .stButton > button, 
+        .stButton > button,
         div[data-baseweb="popover"] > button {{
             background-color: var(--cor-secundaria) !important;
             color: var(--cor-branco) !important;
@@ -259,6 +259,58 @@ def get_css():
         /* 11. BOTÃO DE FECHAR MODAL */
         button[aria-label="Close"] {{
             display: none !important;
+        }}
+
+        /* 11.5 BOTÃO GOOGLE LOGIN */
+        .btn-google-login {{
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background-color: #FFFFFF !important;
+            color: #757575 !important;
+            font-family: 'Roboto', sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            border: 1px solid #DADCE0 !important;
+            border-radius: 4px !important;
+            padding: 10px 24px !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+            transition: background-color 0.2s, box-shadow 0.2s !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+            min-width: 220px !important;
+            height: 42px !important;
+            line-height: 1 !important;
+            text-transform: none !important;
+            font-style: normal !important;
+        }}
+
+        .btn-google-login:hover {{
+            background-color: #F7F8F8 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+            border-color: #D2E3FC !important;
+            text-decoration: none !important;
+        }}
+
+        .btn-google-login:active {{
+            background-color: #E8E8E8 !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+        }}
+
+        .btn-google-login .google-g-logo {{
+            width: 18px !important;
+            height: 18px !important;
+            margin-right: 8px !important;
+            flex-shrink: 0 !important;
+        }}
+
+        .btn-google-login span {{
+            color: #757575 !important;
+            font-family: 'Roboto', sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            text-transform: none !important;
+            font-style: normal !important;
         }}
 
         /* =====================================================================

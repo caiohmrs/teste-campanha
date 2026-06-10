@@ -28,6 +28,7 @@ def render_login_box():
     st.markdown("""
         <div class="login-box">
             <h2>Faça seu login abaixo:</h2>
+            <h6>Use seu Email informado no cadastro:<h6>
         </div>
     """, unsafe_allow_html=True)
 

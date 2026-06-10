@@ -80,6 +80,7 @@ with st.sidebar:
         st.session_state["logout_em_andamento"] = True
         st.session_state["usuario_logado"] = None
         st.session_state["mensagem_exibida"] = False
+        st.session_state.pop("google_credentials", None)
 
         try:
             cookie_manager.delete("comando2026_user_id", key="del_user")
